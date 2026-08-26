@@ -186,7 +186,44 @@ historical and fresh deployments.
   the invariant that justifies it.
 - **A ternary expression.** Use an `if`.
 - **Module-level constants.** Use a helper `fn`.
-- **Fulltext search, grafting, and manifest `features`.** Not yet emitted.
+- **Fulltext search.** Not yet emitted.
+
+## Grafting
+
+A port exists to replace a live deployment, and re-indexing a busy chain from
+scratch takes days. Graft onto the deployment you are replacing instead:
+
+```red
+graft {
+  base: "QmVjXU7yQNyyLphPGqoz8iBzqu5YXphooFJn15JqZ6ZMFz"
+  block: 113581821
+}
+```
+
+That emits the `graft:` block *and* `features: [grafting]`; graph-node rejects one
+without the other. There is at most one per project.
+
+Two things decide whether a graft is accepted, and `redstart verify` checks
+neither — only graph-node validates a graft, and only at deploy time.
+
+**The node must already hold the base.** Grafting copies the base's entity store,
+so only a node already indexing that deployment can do it. Subgraph Studio holds
+only what you deploy to Studio, and refuses with `the graft base is invalid:
+deployment not found`. Deploy a grafted subgraph to a node that has the base, or
+drop the `graft` block and index from scratch.
+
+**The schema must be compatible with the base's.** Two Redstart-specific traps,
+both of which will silently produce an un-graftable subgraph:
+
+- **Ids.** `Id<String>` renders `String!`, which graph-node accepts on its own but
+  which no conventional subgraph declares — they all use `ID!`. Write `Id<ID>`
+  when grafting onto one.
+- **Immutability.** The append-only inference flips an entity nothing loads back
+  to `@entity(immutable: true)`, which changes the storage layout. If the base
+  declares it mutable, declare it `mutable` here too.
+
+Diff the emitted `schema.graphql` against the base's before deploying. It is the
+cheapest check available, and it is the only one you can run yourself.
 
 ## When you find a gap
 
