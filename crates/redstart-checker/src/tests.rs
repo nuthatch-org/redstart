@@ -693,3 +693,103 @@ fn an_event_parameter_the_abi_lacks_is_an_error() {
     let ok = with_handler("let a = Account.create(event.id, { balance: event.params.value })");
     assert!(run(&ok).is_ok());
 }
+
+/// Build a two-module project (`main.red` + a sibling `helpers.red`) and check it.
+fn run_two_module(main: &str, helpers: &str) -> Result<(), Vec<String>> {
+    let dir = tempfile::tempdir().unwrap();
+    fs::create_dir_all(dir.path().join("src/abis")).unwrap();
+    fs::write(
+        dir.path().join("redstart.toml"),
+        "[project]\nname = \"t\"\nentry = \"src/main.red\"",
+    )
+    .unwrap();
+    fs::write(dir.path().join("src/abis/ERC20.json"), ABI).unwrap();
+    fs::write(dir.path().join("src/main.red"), main).unwrap();
+    fs::write(dir.path().join("src/helpers.red"), helpers).unwrap();
+    let tree = redstart_loader::load(dir.path()).unwrap();
+    check(&tree).map(|_| ())
+}
+
+#[test]
+fn a_call_to_an_undefined_function_is_rejected() {
+    let src = format!(
+        "{PREAMBLE}\nfn probe() -> BigInt {{\n  return definitelyNotAFunctionAnywhere(42)\n}}\n"
+    );
+    assert_err_contains(
+        run(&src),
+        "call to undefined function `definitelyNotAFunctionAnywhere`",
+    );
+}
+
+#[test]
+fn an_undefined_call_is_caught_in_every_position() {
+    // Statement, argument, array element and `if` condition all reach `check_expr`.
+    for body in [
+        "  stmtPos(1)",
+        "  let x = BigInt.fromI32(argPos(1))",
+        "  let xs = [arrayPos(1)]",
+        "  if condPos(1) { let y = 1 }",
+    ] {
+        let src = with_handler(body);
+        assert_err_contains(run(&src), "call to undefined function");
+    }
+}
+
+#[test]
+fn a_helper_declared_in_another_module_resolves() {
+    // Cross-module, and with no declared return type — `fn_returns` drops those,
+    // so resolving against it alone would call this undefined.
+    let main = format!(
+        "{PREAMBLE}\nmod helpers;\nhandler on Token.Transfer(event) {{\n  note(event.params.value)\n  let d = double(event.params.value)\n}}\n"
+    );
+    let helpers = "fn note(x: BigInt) {\n  let y = x\n}\nfn double(x: BigInt) -> BigInt {\n  return x + x\n}\n";
+    assert!(
+        run_two_module(&main, helpers).is_ok(),
+        "a helper from a sibling module must resolve"
+    );
+}
+
+#[test]
+fn some_is_option_sugar_and_not_an_undefined_call() {
+    // `Some(x)` lowers to the identity, so it must never be reported as a call.
+    let src =
+        format!("{PREAMBLE}\nfn wrap(x: BigInt) -> Option<BigInt> {{\n  return Some(x)\n}}\n");
+    assert!(run(&src).is_ok());
+}
+
+#[test]
+fn a_module_qualified_call_is_left_alone() {
+    // The check is deliberately narrow: only single-segment callees are judged,
+    // so a `mod::fn(…)` shape is never a false positive here.
+    let main = format!(
+        "{PREAMBLE}\nmod helpers;\nhandler on Token.Transfer(event) {{\n  let d = helpers::double(event.params.value)\n}}\n"
+    );
+    let helpers = "fn double(x: BigInt) -> BigInt {\n  return x + x\n}\n";
+    assert!(run_two_module(&main, helpers).is_ok());
+}
+
+#[test]
+fn an_entity_called_as_a_function_points_at_the_constructor() {
+    let src = with_handler("  let a = Account(event.params.to)");
+    assert_err_contains(run(&src), "call to undefined function `Account`");
+    let errs = run(&src).expect_err("expected a check error");
+    let joined = errs.join("\n");
+    assert!(
+        joined.contains("Account.create(id, { … })"),
+        "expected the constructor fix-it in:\n{joined}"
+    );
+}
+
+#[test]
+fn a_casing_typo_suggests_the_declared_name() {
+    let src = format!(
+        "{PREAMBLE}\nfn scaleUp(x: BigInt) -> BigInt {{\n  return x\n}}\n\
+         fn caller(x: BigInt) -> BigInt {{\n  return scaleup(x)\n}}\n"
+    );
+    let errs = run(&src).expect_err("expected a check error");
+    let joined = errs.join("\n");
+    assert!(
+        joined.contains("did you mean `scaleUp`?"),
+        "expected a casing suggestion in:\n{joined}"
+    );
+}

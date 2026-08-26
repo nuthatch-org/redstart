@@ -28,6 +28,12 @@ time. (`redstart deploy <name> --dry-run` does the same thing and then stops.)
 The generated directory is output, not source. Add it to `.gitignore` (`redstart
 new` does this for you) and never edit it, since the next build overwrites it.
 
+Write the handlers first and the helpers after, if that is how you think. A call
+to a `fn` you have not written yet is `E072` at the call site, so `check` tells
+you what is still outstanding rather than letting it through to fail inside
+`graph build`. Helpers are visible from every module in the project; there is
+nothing to import.
+
 ## Schema: types
 
 | `schema.graphql` | Redstart |
