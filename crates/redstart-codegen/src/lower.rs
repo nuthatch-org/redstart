@@ -237,7 +237,7 @@ fn lower_stmt(stmt: &Stmt, env: &mut Env, scope: &mut Scope, out: &mut String, l
     match stmt {
         Stmt::Let { name, value, .. } => {
             if let Some(ctor) = entity_ctor(value) {
-                lower_entity_ctor(name, &ctor, env, scope, out, level);
+                lower_entity_ctor(&name.name, &ctor, env, scope, out, level);
             } else if matches!(value, Expr::Match { .. }) {
                 scope
                     .warnings
@@ -260,6 +260,22 @@ fn lower_stmt(stmt: &Stmt, env: &mut Env, scope: &mut Scope, out: &mut String, l
         }
         Stmt::Assign { target, value, .. } => lower_assign(target, value, env, scope, out, level),
         Stmt::Return { value, .. } => {
+            // `return Entity.create(…)` has to be bound before it is returned:
+            // the constructor lowers to several statements (a `new`, then one
+            // assignment per record field), which cannot sit inside a `return`
+            // expression. Without this it fell through to the generic call
+            // path and emitted `Entity.create(id, /* record */)` — a method
+            // graph-ts has no such thing as, caught only by `graph build`.
+            if let Some(v) = value {
+                if let Some(ctor) = entity_ctor(v).filter(|c| env.entities.contains_key(&c.entity))
+                {
+                    let tmp = scope.fresh_with("_entity");
+                    lower_entity_ctor(&tmp, &ctor, env, scope, out, level);
+                    flush_all_dirty(scope, out, &pad);
+                    out.push_str(&format!("{pad}return {tmp}\n"));
+                    return;
+                }
+            }
             // Flush every pending entity save before leaving — the block-end
             // auto-save would otherwise be emitted *after* the `return` (dead
             // code) and the write would be silently lost.
@@ -296,7 +312,21 @@ fn lower_stmt(stmt: &Stmt, env: &mut Env, scope: &mut Scope, out: &mut String, l
             var, iter, body, ..
         } => lower_for(var, iter, body, env, scope, out, level),
         Stmt::Expr(e) => {
-            if let Expr::Match {
+            // A create whose result nobody binds. Same expansion as the `let`
+            // form, into a temporary nothing reads.
+            //
+            // The `entities.contains_key` guard is load-bearing: `entity_ctor`
+            // matches any `X.create(…)`, and `<Template>.create(addr)` spawns a
+            // dynamic data source rather than writing an entity. In `let`
+            // position that never collided, because nobody binds a template
+            // spawn; in statement position both shapes look identical.
+            let entity_stmt = entity_ctor(e)
+                .filter(|c| env.entities.contains_key(&c.entity))
+                .map(|c| (c.entity.clone(), c));
+            if let Some((_, ctor)) = entity_stmt {
+                let tmp = scope.fresh_with("_entity");
+                lower_entity_ctor(&tmp, &ctor, env, scope, out, level);
+            } else if let Expr::Match {
                 scrutinee, arms, ..
             } = e
             {
@@ -440,7 +470,7 @@ fn entity_ctor(value: &Expr) -> Option<EntityCtor<'_>> {
 }
 
 fn lower_entity_ctor(
-    name: &Ident,
+    var: &str,
     ctor: &EntityCtor,
     env: &mut Env,
     scope: &mut Scope,
@@ -448,7 +478,6 @@ fn lower_entity_ctor(
     level: usize,
 ) {
     let pad = indent(level);
-    let var = &name.name;
     let entity = &ctor.entity;
     let id = lower_expr(ctor.id, env, scope);
 
@@ -475,10 +504,7 @@ fn lower_entity_ctor(
         CtorKind::Load { in_block } => {
             // `load`/`loadInBlock` return `Option<Entity>`: the local is nullable
             // and must be `match`ed before use, so null-deref is unrepresentable.
-            scope.declare_local(
-                &name.name,
-                RTy::Option(Box::new(RTy::Entity(entity.clone()))),
-            );
+            scope.declare_local(var, RTy::Option(Box::new(RTy::Entity(entity.clone()))));
             let method = if in_block { "loadInBlock" } else { "load" };
             out.push_str(&format!("{pad}let {var} = {entity}.{method}({id})\n"));
         }
@@ -602,7 +628,14 @@ fn lower_match(
         RTy::Option(inner) => {
             let (some_bind, some_body) = find_arm(arms, "Some");
             let (_none_bind, none_body) = find_arm(arms, "None");
-            out.push_str(&format!("{pad}if ({var} != null) {{\n"));
+            // `!==` rather than `!=`: graph-ts gives BigInt, BigDecimal, Bytes
+            // and Address an `@operator('!=')` taking two of themselves, so a
+            // loose comparison against `null` sends the AssemblyScript compiler
+            // into compileBinaryOverload, where it fails an internal assertion
+            // and crashes the whole build. Strict identity skips overload
+            // resolution entirely and is the correct test for a nullable
+            // reference anyway.
+            out.push_str(&format!("{pad}if ({var} !== null) {{\n"));
             lower_arm(
                 some_bind,
                 &format!("{var}!"),
@@ -709,6 +742,19 @@ fn lower_expr(expr: &Expr, env: &mut Env, scope: &mut Scope) -> String {
             .collect::<Vec<_>>()
             .join("."),
         Expr::Field { base, field, .. } => lower_field(base, &field.name, env, scope),
+        // `Some(x)` is Redstart sugar, not a function. An `Option<T>` lowers to
+        // graph-ts's `T | null`, so the constructor is the identity: emitting a
+        // call here produced a reference to an undefined `Some` that only
+        // `graph build` would catch (and `None` is already lowered above).
+        Expr::Call { callee, args, .. }
+            if args.len() == 1
+                && matches!(
+                    callee.as_ref(),
+                    Expr::Path { segments, .. } if segments.len() == 1 && segments[0].name == "Some"
+                ) =>
+        {
+            lower_expr(&args[0], env, scope)
+        }
         Expr::Call { callee, args, .. } => lower_call(callee, args, env, scope),
         Expr::Record { .. } => "/* record */".to_string(),
         Expr::Array { elems, .. } => {

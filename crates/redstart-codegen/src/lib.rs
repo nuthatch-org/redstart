@@ -640,7 +640,7 @@ handler on Token.Transfer(event) {
             m.contains("let acct = Account.load(event.params.to)"),
             "got:\n{m}"
         );
-        assert!(m.contains("if (acct != null) {"), "got:\n{m}");
+        assert!(m.contains("if (acct !== null) {"), "got:\n{m}");
         assert!(m.contains("let a = acct!"), "got:\n{m}");
         assert!(
             m.contains("a.balance = a.balance.plus(event.params.value)"),
@@ -651,6 +651,111 @@ handler on Token.Transfer(event) {
             "matched entity must auto-save, got:\n{m}"
         );
         assert!(gen.warnings.is_empty(), "warnings: {:?}", gen.warnings);
+    }
+
+    /// Found by porting PancakeSwap Infinity CL (nightswatchhq/pancakeswap-
+    /// infinity-cl-redstart). Three separate emissions that `check` accepted and
+    /// only `graph build` rejected, which is exactly the bug class the porting
+    /// guide asks to be reported.
+    #[test]
+    fn option_and_entity_ctor_emissions_compile() {
+        let gen = build(
+            r#"
+abi ERC20 from "./abis/ERC20.json"
+entity Note {
+  id: Id<String>
+  n: Option<BigInt>
+}
+entity Log {
+  id: Id<String>
+  n: BigInt
+}
+source Token {
+  abi: ERC20
+  network: mainnet
+  address: 0x1234567890abcdef1234567890abcdef12345678
+  startBlock: 1
+}
+fn mk(id: String) -> Note {
+  return Note.loadOrCreate(id, { n: None })
+}
+handler on Token.Transfer(event) {
+  let note = mk("1")
+  note.n = Some(event.params.value)
+  match note.n {
+    Some(v) => {
+      Log.create(v.toString(), { n: v })
+    }
+    None => {}
+  }
+}
+"#,
+            TRANSFER_ABI,
+        );
+        let m = &gen.mappings;
+
+        // 1. `Some(x)` is sugar for `x`; emitting a call produced a reference to
+        //    an undefined `Some` in the generated AssemblyScript.
+        assert!(!m.contains("Some("), "`Some(` must not survive, got:\n{m}");
+        assert!(
+            m.contains("note.n = event.params.value"),
+            "Some(x) must lower to x, got:\n{m}"
+        );
+
+        // 2. graph-ts gives BigInt an `@operator('!=')`, so a loose null test
+        //    crashes the AssemblyScript compiler in compileBinaryOverload.
+        assert!(
+            !m.contains("!= null"),
+            "null tests must be strict, got:\n{m}"
+        );
+
+        // 3. A create in statement position must expand, not emit a call to a
+        //    non-existent static with a `/* record */` placeholder argument.
+        assert!(
+            !m.contains("/* record */"),
+            "record literal must be expanded, got:\n{m}"
+        );
+        assert!(m.contains("new Log("), "got:\n{m}");
+
+        // 4. …and so must one in return position.
+        assert!(m.contains("new Note("), "got:\n{m}");
+
+        assert!(gen.warnings.is_empty(), "warnings: {:?}", gen.warnings);
+    }
+
+    /// The guard on the fix above: `<Template>.create(addr)` is a data-source
+    /// spawn, not an entity write, and in statement position the two shapes are
+    /// textually identical.
+    #[test]
+    fn template_create_in_statement_position_is_not_an_entity_ctor() {
+        let gen = build(
+            r#"
+abi ERC20 from "./abis/ERC20.json"
+entity Thing {
+  id: Id<String>
+}
+source Token {
+  abi: ERC20
+  network: mainnet
+  address: 0x1234567890abcdef1234567890abcdef12345678
+  startBlock: 1
+}
+template Pool {
+  abi: ERC20
+  network: mainnet
+}
+handler on Token.Transfer(event) {
+  Pool.create(event.params.to)
+}
+"#,
+            TRANSFER_ABI,
+        );
+        let m = &gen.mappings;
+        assert!(
+            m.contains("Pool.create(event.params.to)"),
+            "template spawn must survive verbatim, got:\n{m}"
+        );
+        assert!(!m.contains("new Pool("), "got:\n{m}");
     }
 
     #[test]

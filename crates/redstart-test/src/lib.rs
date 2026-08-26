@@ -23,6 +23,7 @@ mod value;
 pub use value::{CallVal, EventVal, Value};
 
 use bigdecimal::BigDecimal;
+use bigdecimal::Zero;
 use num_bigint::BigInt;
 use redstart_checker::Checked;
 use redstart_loader::ModuleTree;
@@ -396,6 +397,11 @@ impl<'t> Interp<'t> {
                     "assert" => return self.do_assert(args, world, frame, span),
                     "assertEq" => return self.do_assert_eq(args, world, frame, span),
                     "assertCreated" => return self.do_assert_created(args, world, frame, span),
+                    // `assertMissing(Entity, id)` — the assertion a "this
+                    // handler bails cleanly" test needs. Without it such a test
+                    // asserts nothing at all and passes even if the handler
+                    // silently wrote a half-built entity.
+                    "assertMissing" => return self.do_assert_missing(args, world, frame, span),
                     _ => {}
                 }
             }
@@ -949,6 +955,17 @@ impl<'t> Interp<'t> {
             },
             Value::EventTx(ev) => match field {
                 "hash" => Ok(Value::Bytes(ev.tx_hash)),
+                // The porting guide documents `.from`, `.to`, `.value` and
+                // `.gasPrice` as available to a handler, and codegen lowers them,
+                // so a handler that reads one has to be testable. They are
+                // deterministic zeros here rather than derived from anything: a
+                // test that cares about the sender should assert on an event
+                // parameter, not on the mock transaction.
+                "from" | "to" => Ok(Value::Bytes(vec![0u8; 20])),
+                "value" | "gasPrice" | "gasLimit" | "gasUsed" | "nonce" => {
+                    Ok(Value::Big(BigInt::from(0)))
+                }
+                "index" => Ok(Value::Int(0)),
                 _ => err(
                     format!("transaction has no field `{field}`"),
                     Some(span.clone()),
@@ -970,6 +987,10 @@ impl<'t> Interp<'t> {
                 message: format!("call has no output `{field}`"),
                 span: Some(span.clone()),
             }),
+            // `.length` on a string or a byte string, the same field graph-ts
+            // exposes. Without it a hex parser cannot even be evaluated.
+            Value::Str(ref t) if field == "length" => Ok(Value::Int(t.chars().count() as i64)),
+            Value::Bytes(ref b) if field == "length" => Ok(Value::Int(b.len() as i64)),
             Value::Array(ref items) => match field {
                 "length" => Ok(Value::Int(items.len() as i64)),
                 _ => err(format!("array has no field `{field}`"), Some(span.clone())),
@@ -1007,6 +1028,101 @@ impl<'t> Interp<'t> {
             }
         }
         if let Expr::Field { base, field, .. } = callee {
+            // `log.debug(...)` and friends. graph-node's log namespace has no
+            // return value and no observable effect on the store, so the
+            // interpreter evaluates the arguments (they can still fail) and
+            // yields Unit. `log.critical` is the exception: in graph-node it
+            // terminates the handler, so it is modelled as a test failure rather
+            // than quietly ignored.
+            if single_path(base).as_deref() == Some("log") {
+                let level = field.name.clone();
+                if matches!(
+                    level.as_str(),
+                    "debug" | "info" | "warning" | "error" | "critical"
+                ) {
+                    for a in args {
+                        self.eval(a, world, frame)?;
+                    }
+                    if level == "critical" {
+                        return err(
+                            "handler aborted: log.critical".to_string(),
+                            Some(span.clone()),
+                        );
+                    }
+                    return Ok(Value::Unit);
+                }
+            }
+
+            // Static constructors. Without these the interpreter can evaluate a
+            // handler but not a helper that builds a number, which is most of
+            // them - every subgraph writes `BigInt.fromI32(0)` somewhere.
+            if let Some(ns) = single_path(base) {
+                let ctor = field.name.as_str();
+                if ns == "BigInt" && ctor.starts_with("from") {
+                    let a = args
+                        .first()
+                        .map(|a| self.eval(a, world, frame))
+                        .transpose()?;
+                    return match ctor {
+                        "fromString" => a
+                            .as_ref()
+                            .map(|v| v.canonical())
+                            .and_then(|t| BigInt::from_str(t.trim()).ok())
+                            .map(Value::Big)
+                            .ok_or_else(|| TError {
+                                message: "BigInt.fromString: not an integer".into(),
+                                span: Some(span.clone()),
+                            }),
+                        "fromByteArray" | "fromUnsignedBytes" | "fromSignedBytes" => a
+                            .as_ref()
+                            .and_then(|v| v.as_bytes())
+                            .map(|b| Value::Big(BigInt::from_bytes_be(num_bigint::Sign::Plus, &b)))
+                            .ok_or_else(|| TError {
+                                message: format!("BigInt.{ctor}: not bytes"),
+                                span: Some(span.clone()),
+                            }),
+                        _ => a
+                            .as_ref()
+                            .and_then(|v| v.to_bigint())
+                            .map(Value::Big)
+                            .ok_or_else(|| TError {
+                                message: format!("BigInt.{ctor}: not a number"),
+                                span: Some(span.clone()),
+                            }),
+                    };
+                }
+                if ns == "BigDecimal" && ctor.starts_with("from") {
+                    let a = args
+                        .first()
+                        .map(|a| self.eval(a, world, frame))
+                        .transpose()?;
+                    return a
+                        .as_ref()
+                        .and_then(|v| {
+                            BigDecimal::from_str(v.canonical().trim())
+                                .ok()
+                                .or_else(|| v.to_bigdecimal())
+                        })
+                        .map(Value::Dec)
+                        .ok_or_else(|| TError {
+                            message: "BigDecimal.fromString: not a decimal".into(),
+                            span: Some(span.clone()),
+                        });
+                }
+                if (ns == "Bytes" || ns == "Address") && ctor.starts_with("from") {
+                    let a = args
+                        .first()
+                        .map(|a| self.eval(a, world, frame))
+                        .transpose()?;
+                    if let Some(v) = a {
+                        if let Some(b) = v.as_bytes() {
+                            return Ok(Value::Bytes(b));
+                        }
+                        return Ok(v);
+                    }
+                }
+            }
+
             // `Abi.bind(addr)` -> a bound contract. (base is a namespace path)
             if field.name == "bind" {
                 if let Some(name) = single_path(base) {
@@ -1106,16 +1222,170 @@ impl<'t> Interp<'t> {
                         return Ok(Value::Big(b.magnitude().clone().into()));
                     }
                 }
-                "plus" | "minus" | "times" | "div" => {
+                // String methods. `startsWith`/`slice`/`charAt` are what a hex
+                // parser needs, and every ported subgraph has one.
+                "startsWith" | "endsWith" | "includes" | "slice" | "charAt" | "concat"
+                | "split" | "toLowerCase" | "toUpperCase" => {
+                    if let Value::Str(hay) = &bv {
+                        let a0 = args
+                            .first()
+                            .map(|a| self.eval(a, world, frame))
+                            .transpose()?;
+                        let a1 = args
+                            .get(1)
+                            .map(|a| self.eval(a, world, frame))
+                            .transpose()?;
+                        let s0 = a0.as_ref().map(|v| v.canonical()).unwrap_or_default();
+                        return Ok(match field.name.as_str() {
+                            "startsWith" => Value::Bool(hay.starts_with(&s0)),
+                            "endsWith" => Value::Bool(hay.ends_with(&s0)),
+                            "includes" => Value::Bool(hay.contains(&s0)),
+                            "toLowerCase" => Value::Str(hay.to_lowercase()),
+                            "toUpperCase" => Value::Str(hay.to_uppercase()),
+                            "concat" => Value::Str(format!("{hay}{s0}")),
+                            "split" => Value::Array(
+                                hay.split(&s0 as &str)
+                                    .map(|p| Value::Str(p.to_string()))
+                                    .collect(),
+                            ),
+                            "charAt" => {
+                                let i = a0
+                                    .and_then(|v| v.to_bigint())
+                                    .and_then(|b| usize::try_from(b).ok())
+                                    .unwrap_or(0);
+                                Value::Str(hay.chars().nth(i).map(String::from).unwrap_or_default())
+                            }
+                            _ => {
+                                let chars: Vec<char> = hay.chars().collect();
+                                let from = a0
+                                    .and_then(|v| v.to_bigint())
+                                    .and_then(|b| usize::try_from(b).ok())
+                                    .unwrap_or(0)
+                                    .min(chars.len());
+                                let to = a1
+                                    .and_then(|v| v.to_bigint())
+                                    .and_then(|b| usize::try_from(b).ok())
+                                    .unwrap_or(chars.len())
+                                    .clamp(from, chars.len());
+                                Value::Str(chars[from..to].iter().collect())
+                            }
+                        });
+                    }
+                }
+                "push" => {
+                    let a0 = args
+                        .first()
+                        .map(|a| self.eval(a, world, frame))
+                        .transpose()?;
+                    if let (Value::Array(mut items), Some(v)) = (bv.clone(), a0) {
+                        items.push(v);
+                        return Ok(Value::Array(items));
+                    }
+                }
+                "pow" => {
+                    let e = args
+                        .first()
+                        .map(|a| self.eval(a, world, frame))
+                        .transpose()?
+                        .and_then(|v| v.to_bigint())
+                        .and_then(|b| u32::try_from(b).ok())
+                        .unwrap_or(0);
+                    if let Some(a) = bv.to_bigint() {
+                        return Ok(Value::Big(a.pow(e)));
+                    }
+                }
+                "neg" => {
+                    if let Value::Dec(d) = &bv {
+                        return Ok(Value::Dec(-d.clone()));
+                    }
+                    if let Some(a) = bv.to_bigint() {
+                        return Ok(Value::Big(-a));
+                    }
+                }
+                "equals" | "notEqual" | "lt" | "gt" | "le" | "ge" => {
                     let rhs = args
                         .first()
                         .map(|a| self.eval(a, world, frame))
                         .transpose()?;
+                    if let Some(r) = rhs {
+                        // Compare as decimals when either side is one, so a
+                        // BigInt/BigDecimal mix does not silently truncate.
+                        let ord = if matches!(bv, Value::Dec(_)) || matches!(r, Value::Dec(_)) {
+                            match (bv.to_bigdecimal(), r.to_bigdecimal()) {
+                                (Some(a), Some(b)) => a.cmp(&b),
+                                _ => return err("cannot compare", Some(span.clone())),
+                            }
+                        } else {
+                            match (bv.to_bigint(), r.to_bigint()) {
+                                (Some(a), Some(b)) => a.cmp(&b),
+                                _ => return err("cannot compare", Some(span.clone())),
+                            }
+                        };
+                        return Ok(Value::Bool(match field.name.as_str() {
+                            "equals" => ord == std::cmp::Ordering::Equal,
+                            "notEqual" => ord != std::cmp::Ordering::Equal,
+                            "lt" => ord == std::cmp::Ordering::Less,
+                            "gt" => ord == std::cmp::Ordering::Greater,
+                            "le" => ord != std::cmp::Ordering::Greater,
+                            _ => ord != std::cmp::Ordering::Less,
+                        }));
+                    }
+                }
+                "leftShift" | "rightShift" => {
+                    let n = args
+                        .first()
+                        .map(|a| self.eval(a, world, frame))
+                        .transpose()?
+                        .and_then(|v| v.to_bigint())
+                        .and_then(|b| u32::try_from(b).ok())
+                        .unwrap_or(0);
+                    if let Some(a) = bv.to_bigint() {
+                        return Ok(Value::Big(if field.name == "leftShift" {
+                            a << n
+                        } else {
+                            a >> n
+                        }));
+                    }
+                }
+                "plus" | "minus" | "times" | "div" | "mod" | "divDecimal" => {
+                    let rhs = args
+                        .first()
+                        .map(|a| self.eval(a, world, frame))
+                        .transpose()?;
+                    // BigDecimal arithmetic went missing here, so any helper
+                    // doing decimal maths was untestable.
+                    let decimal = field.name == "divDecimal"
+                        || matches!(bv, Value::Dec(_))
+                        || matches!(rhs, Some(Value::Dec(_)));
+                    if decimal {
+                        if let (Some(a), Some(b)) = (
+                            bv.to_bigdecimal(),
+                            rhs.as_ref().and_then(|r| r.to_bigdecimal()),
+                        ) {
+                            return Ok(Value::Dec(match field.name.as_str() {
+                                "plus" => a + b,
+                                "minus" => a - b,
+                                "times" => a * b,
+                                _ => {
+                                    if b.is_zero() {
+                                        return err("division by zero", Some(span.clone()));
+                                    }
+                                    a / b
+                                }
+                            }));
+                        }
+                    }
                     if let (Some(a), Some(b)) = (bv.to_bigint(), rhs.and_then(|r| r.to_bigint())) {
                         return Ok(Value::Big(match field.name.as_str() {
                             "plus" => a + b,
                             "minus" => a - b,
                             "times" => a * b,
+                            "mod" => {
+                                if b == BigInt::from(0) {
+                                    return err("modulo by zero", Some(span.clone()));
+                                }
+                                a % b
+                            }
                             _ => {
                                 if b == BigInt::from(0) {
                                     return err("division by zero", Some(span.clone()));
@@ -1254,6 +1524,30 @@ impl<'t> Interp<'t> {
         } else {
             Ok(Value::Null)
         }
+    }
+
+    fn do_assert_missing(
+        &self,
+        args: &[Expr],
+        world: &mut World,
+        frame: &mut Frame,
+        span: &Span,
+    ) -> R<()> {
+        let entity = args.first().and_then(single_path).ok_or_else(|| TError {
+            message: "assertMissing needs an entity name and an id".into(),
+            span: Some(span.clone()),
+        })?;
+        let id = self.eval_id(&args[1..], world, frame, span)?;
+        if world.store.contains_key(&(entity.clone(), id.clone())) {
+            return err(
+                format!(
+                    "assertMissing failed: `{entity}` with id 0x{} exists",
+                    hex(&id)
+                ),
+                Some(span.clone()),
+            );
+        }
+        Ok(())
     }
 
     fn at_entity(
