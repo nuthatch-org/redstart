@@ -28,6 +28,8 @@ pub struct Program {
     pub sources: Vec<SourceDecl>,
     /// `template Name { ... }` dynamic data sources.
     pub templates: Vec<TemplateDecl>,
+    /// `graft { base: "Qm…", block: N }` — inherit a base deployment's store.
+    pub graft: Option<GraftDecl>,
     /// `handler on Source.Event(p) { ... }` event handlers.
     pub handlers: Vec<HandlerDecl>,
     /// Free `fn` declarations (helpers).
@@ -154,6 +156,17 @@ pub struct SourceDecl {
     /// The data source name.
     pub name: Ident,
     /// Settings such as `abi`, `network`, `address`, `startBlock`.
+    pub settings: Vec<Setting>,
+    /// Span of the whole declaration.
+    pub span: Span,
+}
+
+/// `graft { base: "Qm…", block: N }` — start from another deployment's entity
+/// store instead of indexing from scratch. Subgraph-level, so there is at most
+/// one per project, and it makes the manifest declare `features: [grafting]`.
+#[derive(Debug, Clone)]
+pub struct GraftDecl {
+    /// Settings: `base` (the base deployment id) and `block`.
     pub settings: Vec<Setting>,
     /// Span of the whole declaration.
     pub span: Span,

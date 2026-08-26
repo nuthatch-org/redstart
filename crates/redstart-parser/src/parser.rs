@@ -217,6 +217,23 @@ impl<'t> Parser<'t> {
             Some(Token::KwAggregation) => program.aggregations.push(self.parse_aggregation()?),
             Some(Token::KwSource) => program.sources.push(self.parse_source()?),
             Some(Token::KwTemplate) => program.templates.push(self.parse_template()?),
+            Some(Token::KwGraft) => {
+                let graft = self.parse_graft()?;
+                if program.graft.is_some() {
+                    // Point at the duplicate itself; `self.err` would use the
+                    // cursor, which by now has moved past the whole block and
+                    // lands on whatever declaration follows it.
+                    return Err(ParseError::new(
+                        "duplicate `graft` block",
+                        "only one graft per subgraph",
+                        graft.span.clone(),
+                    )
+                    .with_help(
+                        "a manifest carries at most one `graft`; merge or remove the extra block",
+                    ));
+                }
+                program.graft = Some(graft);
+            }
             Some(Token::KwHandler) => program.handlers.push(self.parse_handler()?),
             Some(Token::KwFn) => program.functions.push(self.parse_fn(is_pub)?),
             Some(Token::KwTest) => program.tests.push(self.parse_test()?),
@@ -225,7 +242,7 @@ impl<'t> Parser<'t> {
                     .err("expected a top-level declaration", "unexpected token")
                     .with_help(
                         "top-level items are `abi`, `entity`, `source`, `template`, \
-                         `handler`, `fn`, `test`, `mod`, or `use`",
+                         `handler`, `fn`, `test`, `graft`, `mod`, or `use`",
                     ));
             }
         }
@@ -244,6 +261,7 @@ impl<'t> Parser<'t> {
                     | Token::KwAggregation
                     | Token::KwSource
                     | Token::KwTemplate
+                    | Token::KwGraft
                     | Token::KwHandler
                     | Token::KwFn
                     | Token::KwTest
@@ -488,6 +506,17 @@ impl<'t> Parser<'t> {
         let settings = self.parse_settings_block()?;
         Ok(SourceDecl {
             name,
+            settings,
+            span: self.span_from(start),
+        })
+    }
+
+    /// `graft { base: "Qm…", block: 113581821 }`
+    fn parse_graft(&mut self) -> PResult<GraftDecl> {
+        let start = self.cur_start();
+        self.expect(Token::KwGraft, "to begin a graft")?;
+        let settings = self.parse_settings_block()?;
+        Ok(GraftDecl {
             settings,
             span: self.span_from(start),
         })

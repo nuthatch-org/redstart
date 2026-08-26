@@ -35,6 +35,8 @@ pub enum Token {
     KwSource,
     #[token("template")]
     KwTemplate,
+    #[token("graft")]
+    KwGraft,
     #[token("handler")]
     KwHandler,
     #[token("on")]
@@ -170,6 +172,7 @@ impl Token {
             KwAggregation => "`aggregation`",
             KwSource => "`source`",
             KwTemplate => "`template`",
+            KwGraft => "`graft`",
             KwHandler => "`handler`",
             KwOn => "`on`",
             KwDerived => "`derived`",

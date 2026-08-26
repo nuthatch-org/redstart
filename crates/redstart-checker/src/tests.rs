@@ -793,3 +793,109 @@ fn a_casing_typo_suggests_the_declared_name() {
         "expected a casing suggestion in:\n{joined}"
     );
 }
+
+// ---------------------------------------------------------------------------
+// E006: entity modifiers. Unknown ones used to be silently ignored, which was
+// tolerable until `mutable` existed — misspell it and the append-only inference
+// quietly turns the entity immutable, changing graph-node's storage layout and
+// making the subgraph incompatible with a graft base, with no diagnostic.
+// ---------------------------------------------------------------------------
+
+const MODIFIER_PREAMBLE: &str = r#"
+abi ERC20 from "./abis/ERC20.json"
+source Token {
+  abi: ERC20
+  network: mainnet
+  address: 0x1234567890abcdef1234567890abcdef12345678
+  startBlock: 1
+}
+handler on Token.Transfer(event) {
+  let a = Account.loadOrCreate(event.params.to, { balance: BigInt.zero })
+  a.balance = a.balance + event.params.value
+}
+"#;
+
+fn with_entity(decl: &str) -> String {
+    format!("{decl}\n{MODIFIER_PREAMBLE}")
+}
+
+#[test]
+fn known_entity_modifiers_are_accepted() {
+    for m in ["", "immutable", "mutable", "timeseries"] {
+        let src = with_entity(&format!(
+            "entity Account {m} {{ id: Id<Bytes> balance: BigInt }}"
+        ));
+        // `timeseries` has its own structural requirements; the point here is
+        // only that the modifier itself is not reported as unknown.
+        if let Err(errs) = run(&src) {
+            let joined = errs.join("\n");
+            assert!(
+                !joined.contains("unknown entity modifier"),
+                "`{m}` must be a known modifier, got:\n{joined}"
+            );
+        }
+    }
+}
+
+#[test]
+fn an_unknown_entity_modifier_is_rejected() {
+    let src = with_entity("entity Account bananagram { id: Id<Bytes> balance: BigInt }");
+    assert_err_contains(run(&src), "unknown entity modifier `bananagram`");
+}
+
+#[test]
+fn a_misspelled_mutable_suggests_the_real_one() {
+    let src = with_entity("entity Account mutible { id: Id<Bytes> balance: BigInt }");
+    let errs = run(&src).expect_err("expected a check error");
+    let joined = errs.join("\n");
+    assert!(
+        joined.contains("unknown entity modifier `mutible`"),
+        "got:\n{joined}"
+    );
+    assert!(
+        joined.contains("did you mean `mutable`?"),
+        "a near-miss must suggest the real modifier, got:\n{joined}"
+    );
+}
+
+#[test]
+fn mutable_and_immutable_together_are_rejected() {
+    let src = with_entity("entity Account mutable immutable { id: Id<Bytes> balance: BigInt }");
+    assert_err_contains(run(&src), "is both `mutable` and `immutable`");
+}
+
+#[test]
+fn a_graft_block_parses_and_checks() {
+    let src = format!(
+        "entity Account {{ id: Id<Bytes> balance: BigInt }}\n\
+         graft {{ base: \"QmVjXU7yQNyyLphPGqoz8iBzqu5YXphooFJn15JqZ6ZMFz\" block: 113581821 }}\n\
+         {MODIFIER_PREAMBLE}"
+    );
+    assert!(run(&src).is_ok(), "graft block must check: {:?}", run(&src));
+}
+
+#[test]
+fn two_graft_blocks_are_rejected() {
+    // This one is caught by the parser, not the checker, so it fails at load
+    // time and never reaches `check` — hence its own harness.
+    let src = format!(
+        "entity Account {{ id: Id<Bytes> balance: BigInt }}\n\
+         graft {{ base: \"Qm1\" block: 1 }}\n\
+         graft {{ base: \"Qm2\" block: 2 }}\n\
+         {MODIFIER_PREAMBLE}"
+    );
+    let dir = tempfile::tempdir().unwrap();
+    fs::create_dir_all(dir.path().join("src/abis")).unwrap();
+    fs::write(
+        dir.path().join("redstart.toml"),
+        "[project]\nname = \"t\"\nentry = \"src/main.red\"",
+    )
+    .unwrap();
+    fs::write(dir.path().join("src/abis/ERC20.json"), ABI).unwrap();
+    fs::write(dir.path().join("src/main.red"), &src).unwrap();
+
+    let loaded = redstart_loader::load(dir.path());
+    assert!(loaded.is_err(), "a second graft block must be rejected");
+    let msg = format!("{:?}", loaded.err().unwrap());
+    assert!(msg.contains("only one graft per subgraph"), "got: {msg}");
+}

@@ -8,7 +8,7 @@
 use crate::names::Names;
 use redstart_checker::AbiIndex;
 use redstart_parser::ast::{
-    BlockFilter, Expr, HandlerDecl, HandlerKind, Setting, SourceDecl, TemplateDecl,
+    BlockFilter, Expr, GraftDecl, HandlerDecl, HandlerKind, Setting, SourceDecl, TemplateDecl,
 };
 use std::collections::BTreeSet;
 
@@ -41,6 +41,8 @@ pub struct ManifestInput<'a> {
     /// contract class per ABI listed on a data source, so these must be listed
     /// alongside each source's own ABI or the generated mapping won't compile.
     pub bound_abis: &'a BTreeSet<String>,
+    /// `graft { base, block }`, if the project declares one.
+    pub graft: Option<&'a GraftDecl>,
 }
 
 /// Render `subgraph.yaml`, collecting any warnings (e.g. unresolved signatures).
@@ -69,6 +71,21 @@ pub fn render(input: &ManifestInput, abi_index: &mut AbiIndex) -> (String, Vec<S
     // history needed for reorgs — smaller DB, faster queries — with no effect on
     // current-state queries.
     out.push_str("indexerHints:\n  prune: auto\n");
+
+    // Grafting is a manifest *feature*, and graph-node rejects a `graft:` block
+    // that is not declared in `features:`. Both or neither.
+    if let Some(graft) = input.graft {
+        let base = setting_str(&graft.settings, "base");
+        let block = setting_str(&graft.settings, "block");
+        match (base, block) {
+            (Some(base), Some(block)) => {
+                out.push_str("features:\n  - grafting\n");
+                out.push_str(&format!("graft:\n  base: {base}\n  block: {block}\n"));
+            }
+            _ => warnings
+                .push("`graft` needs both `base` and `block`; emitting no graft".to_string()),
+        }
+    }
 
     out.push_str("dataSources:\n");
     for source in input.sources {

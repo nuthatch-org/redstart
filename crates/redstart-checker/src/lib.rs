@@ -234,6 +234,7 @@ fn analyze(
         for e in &m.program.entities {
             check_entity(e, &entity_names, &aux_types, &entity_meta, file, &mut diags);
             check_implements(e, &interfaces, file, &mut diags);
+            check_entity_modifiers(e, file, &mut diags);
         }
         for agg in &m.program.aggregations {
             if !entity_names.iter().any(|n| n == &agg.source.name) {
@@ -2623,7 +2624,24 @@ fn collect_immutable_entities(tree: &ModuleTree) -> HashSet<String> {
             );
         }
     }
-    created.difference(&mutated).cloned().collect()
+    // An entity declared `mutable` opts out. The inference is an optimisation
+    // (§4.3), but `@entity(immutable: true)` changes graph-node's storage layout,
+    // which makes the subgraph incompatible with a graft base that declares the
+    // same entity mutable. A port that must stay layout-compatible needs a way to
+    // say so, and silently rewriting it would be the worse default.
+    let opted_out: HashSet<String> = tree
+        .ordered()
+        .iter()
+        .flat_map(|m| m.program.entities.iter())
+        .filter(|e| e.modifiers.iter().any(|md| md.name == "mutable"))
+        .map(|e| e.name.name.clone())
+        .collect();
+
+    created
+        .difference(&mutated)
+        .filter(|name| !opted_out.contains(*name))
+        .cloned()
+        .collect()
 }
 
 /// `Entity.<method>(...)` call → `(entity, method)` for the create/load family.
@@ -2827,6 +2845,87 @@ fn validate_type(
             }
         }
     }
+}
+
+/// E006: an entity modifier that is not one Redstart knows.
+///
+/// These were silently ignored, which is tolerable for a decorative typo and not
+/// tolerable for `mutable`: misspell it and the append-only inference quietly
+/// turns the entity immutable, changing graph-node's storage layout and making
+/// the subgraph incompatible with a graft base — with no diagnostic anywhere.
+fn check_entity_modifiers(entity: &EntityDecl, file: &str, diags: &mut Vec<Diag>) {
+    const KNOWN: [&str; 3] = ["immutable", "mutable", "timeseries"];
+
+    for m in &entity.modifiers {
+        if !KNOWN.contains(&m.name.as_str()) {
+            let mut d = Diag::new(
+                file,
+                &m.span,
+                "E006",
+                format!("unknown entity modifier `{}`", m.name),
+                "not a known modifier",
+            );
+            if let Some(sug) = KNOWN.iter().find(|k| levenshtein_within(&m.name, k, 2)) {
+                d = d.with_help(format!("did you mean `{sug}`?"));
+            } else {
+                d = d.with_help("known modifiers are `immutable`, `mutable`, and `timeseries`");
+            }
+            diags.push(d);
+        }
+    }
+
+    let has = |n: &str| entity.modifiers.iter().any(|m| m.name == n);
+    if has("mutable") && has("immutable") {
+        diags.push(
+            Diag::new(
+                file,
+                &entity.name.span,
+                "E006",
+                format!(
+                    "entity `{}` is both `mutable` and `immutable`",
+                    entity.name.name
+                ),
+                "contradictory modifiers",
+            )
+            .with_help(
+                "keep one: `mutable` opts out of the append-only inference, `immutable` opts in",
+            ),
+        );
+    }
+    if has("mutable") && has("timeseries") {
+        diags.push(
+            Diag::new(
+                file,
+                &entity.name.span,
+                "E006",
+                format!(
+                    "timeseries entity `{}` cannot be `mutable`",
+                    entity.name.name
+                ),
+                "a timeseries is append-only by construction",
+            )
+            .with_help("drop `mutable`; graph-node requires timeseries entities to be immutable"),
+        );
+    }
+}
+
+/// Cheap edit-distance gate for "did you mean" suggestions.
+fn levenshtein_within(a: &str, b: &str, max: usize) -> bool {
+    let (a, b) = (a.as_bytes(), b.as_bytes());
+    if a.len().abs_diff(b.len()) > max {
+        return false;
+    }
+    let mut prev: Vec<usize> = (0..=b.len()).collect();
+    let mut cur = vec![0usize; b.len() + 1];
+    for i in 1..=a.len() {
+        cur[0] = i;
+        for j in 1..=b.len() {
+            let cost = usize::from(a[i - 1] != b[j - 1]);
+            cur[j] = (prev[j] + 1).min(cur[j - 1] + 1).min(prev[j - 1] + cost);
+        }
+        std::mem::swap(&mut prev, &mut cur);
+    }
+    prev[b.len()] <= max
 }
 
 fn entity_name_of(ty: &TypeExpr) -> Option<String> {

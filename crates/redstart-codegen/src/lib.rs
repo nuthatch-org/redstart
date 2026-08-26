@@ -112,6 +112,9 @@ pub fn generate(tree: &ModuleTree, checked: &mut Checked) -> Generated {
     let mut interfaces: Vec<&InterfaceDecl> = Vec::new();
     let mut aggregations: Vec<&AggregationDecl> = Vec::new();
     let mut sources: Vec<&SourceDecl> = Vec::new();
+    // Subgraph-level, so the first one found wins; the parser already rejects a
+    // second in the same module and the checker rejects one across modules.
+    let mut graft: Option<&redstart_parser::ast::GraftDecl> = None;
     let mut templates: Vec<&TemplateDecl> = Vec::new();
     let mut handlers: Vec<&HandlerDecl> = Vec::new();
     let mut functions: Vec<&FnDecl> = Vec::new();
@@ -122,6 +125,9 @@ pub fn generate(tree: &ModuleTree, checked: &mut Checked) -> Generated {
         interfaces.extend(module.program.interfaces.iter());
         aggregations.extend(module.program.aggregations.iter());
         sources.extend(module.program.sources.iter());
+        if graft.is_none() {
+            graft = module.program.graft.as_ref();
+        }
         templates.extend(module.program.templates.iter());
         handlers.extend(module.program.handlers.iter());
         functions.extend(module.program.functions.iter());
@@ -169,6 +175,7 @@ pub fn generate(tree: &ModuleTree, checked: &mut Checked) -> Generated {
         uses_aggregations,
         names: &names,
         bound_abis: &bound_abis,
+        graft,
     };
     let (manifest_src, mut warnings) = manifest::render(&input, &mut checked.abis);
 
@@ -651,6 +658,163 @@ handler on Token.Transfer(event) {
             "matched entity must auto-save, got:\n{m}"
         );
         assert!(gen.warnings.is_empty(), "warnings: {:?}", gen.warnings);
+    }
+
+    /// Grafting, and the `mutable` opt-out it needs.
+    ///
+    /// Both came out of the same problem: a port exists to replace a live
+    /// deployment, and re-syncing from scratch can take weeks, so it wants to
+    /// graft. Grafting requires schema compatibility with the base, and the
+    /// append-only inference was silently making that impossible.
+    #[test]
+    fn graft_emits_the_block_and_the_feature() {
+        let gen = build(
+            r#"
+abi ERC20 from "./abis/ERC20.json"
+entity Move {
+  id: Id<ID>
+  amount: BigInt
+}
+source Token {
+  abi: ERC20
+  network: mainnet
+  address: 0x1234567890abcdef1234567890abcdef12345678
+  startBlock: 1
+}
+graft {
+  base: "QmVjXU7yQNyyLphPGqoz8iBzqu5YXphooFJn15JqZ6ZMFz"
+  block: 113581821
+}
+handler on Token.Transfer(event) {
+  Move.create(event.id, { amount: event.params.value })
+}
+"#,
+            TRANSFER_ABI,
+        );
+        let m = &gen.manifest;
+        // graph-node rejects a `graft:` that is not declared in `features:`, so
+        // the two must be emitted together or not at all.
+        assert!(m.contains("features:\n  - grafting\n"), "got:\n{m}");
+        assert!(
+            m.contains("graft:\n  base: QmVjXU7yQNyyLphPGqoz8iBzqu5YXphooFJn15JqZ6ZMFz\n  block: 113581821\n"),
+            "got:\n{m}"
+        );
+    }
+
+    #[test]
+    fn no_graft_block_emits_neither_graft_nor_the_feature() {
+        let gen = build(
+            r#"
+abi ERC20 from "./abis/ERC20.json"
+entity Move {
+  id: Id<ID>
+  amount: BigInt
+}
+source Token {
+  abi: ERC20
+  network: mainnet
+  address: 0x1234567890abcdef1234567890abcdef12345678
+  startBlock: 1
+}
+handler on Token.Transfer(event) {
+  Move.create(event.id, { amount: event.params.value })
+}
+"#,
+            TRANSFER_ABI,
+        );
+        assert!(!gen.manifest.contains("graft:"), "got:\n{}", gen.manifest);
+        assert!(!gen.manifest.contains("grafting"), "got:\n{}", gen.manifest);
+    }
+
+    /// The optimiser infers `immutable: true` for an entity nothing loads back.
+    /// That changes graph-node's storage layout, so a schema that must stay
+    /// compatible with a graft base needs to decline it — and before `mutable`
+    /// existed, it could not.
+    #[test]
+    fn mutable_declines_the_append_only_inference() {
+        const SRC: &str = r#"
+abi ERC20 from "./abis/ERC20.json"
+entity Kept MODIFIER {
+  id: Id<ID>
+  amount: BigInt
+}
+source Token {
+  abi: ERC20
+  network: mainnet
+  address: 0x1234567890abcdef1234567890abcdef12345678
+  startBlock: 1
+}
+handler on Token.Transfer(event) {
+  Kept.create(event.id, { amount: event.params.value })
+}
+"#;
+        // Created and never loaded, so the inference fires.
+        let inferred = build(&SRC.replace(" MODIFIER", ""), TRANSFER_ABI);
+        assert!(
+            inferred
+                .schema
+                .contains("type Kept @entity(immutable: true)"),
+            "the inference must still fire by default, got:\n{}",
+            inferred.schema
+        );
+
+        // …unless the author declines it.
+        let declined = build(&SRC.replace("MODIFIER", "mutable"), TRANSFER_ABI);
+        assert!(
+            declined
+                .schema
+                .contains("type Kept @entity(immutable: false)"),
+            "`mutable` must decline the inference, got:\n{}",
+            declined.schema
+        );
+
+        // An explicit `immutable` still opts in.
+        let explicit = build(&SRC.replace("MODIFIER", "immutable"), TRANSFER_ABI);
+        assert!(
+            explicit
+                .schema
+                .contains("type Kept @entity(immutable: true)"),
+            "got:\n{}",
+            explicit.schema
+        );
+    }
+
+    /// `Id<ID>` renders `id: ID!`, which is what every conventional subgraph
+    /// declares. `Id<String>` renders `String!`, which graph-node accepts on its
+    /// own but which would fail a graft against a normal base.
+    #[test]
+    fn id_of_id_renders_the_canonical_id_type() {
+        let gen = build(
+            r#"
+abi ERC20 from "./abis/ERC20.json"
+entity A { id: Id<ID> n: BigInt }
+entity B { id: Id<String> n: BigInt }
+entity C { id: Id<Bytes> n: BigInt }
+source Token {
+  abi: ERC20
+  network: mainnet
+  address: 0x1234567890abcdef1234567890abcdef12345678
+  startBlock: 1
+}
+handler on Token.Transfer(event) {
+  A.create(event.id, { n: event.params.value })
+}
+"#,
+            TRANSFER_ABI,
+        );
+        let s = &gen.schema;
+        assert!(
+            s.contains("type A @entity(immutable: true) {\n  id: ID!"),
+            "got:\n{s}"
+        );
+        assert!(
+            s.contains("type B @entity(immutable: false) {\n  id: String!"),
+            "got:\n{s}"
+        );
+        assert!(
+            s.contains("type C @entity(immutable: false) {\n  id: Bytes!"),
+            "got:\n{s}"
+        );
     }
 
     /// Found by porting PancakeSwap Infinity CL (nightswatchhq/pancakeswap-

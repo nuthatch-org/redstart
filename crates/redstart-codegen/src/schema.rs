@@ -122,9 +122,14 @@ fn entity_directives(entity: &EntityDecl, immutable_inferred: &HashSet<String>) 
     // Immutable if: declared `immutable`, a timeseries (append-only), or *inferred*
     // append-only by the checker (created but never loaded/mutated) — the §4.3
     // optimisation. Immutable entities index faster and use far less disk.
+    // `mutable` is an explicit opt-out of both the `immutable` modifier and the
+    // append-only inference, for schemas that must stay layout-compatible with a
+    // graft base. A timeseries is immutable by construction and cannot opt out.
+    let opted_out = entity.modifiers.iter().any(|m| m.name == "mutable");
     let immutable = timeseries
-        || entity.modifiers.iter().any(|m| m.name == "immutable")
-        || immutable_inferred.contains(&entity.name.name);
+        || (!opted_out
+            && (entity.modifiers.iter().any(|m| m.name == "immutable")
+                || immutable_inferred.contains(&entity.name.name)));
 
     let mut args = vec![format!("immutable: {immutable}")];
     if timeseries {
