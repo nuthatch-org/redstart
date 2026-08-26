@@ -280,6 +280,13 @@ static EXPLANATIONS: &[Explanation] = &[
         prevents: "",
         fix: "Check the function name against the ABI (only view/pure calls are supported).",
     },
+    Explanation {
+        code: "E072",
+        title: "call to undefined function",
+        summary: "A bare `name(…)` call named no declared `fn`, in this module or any other.",
+        prevents: "A half-finished port passing `check` and then failing deep inside `graph build` with an AssemblyScript `Cannot find name` — no Redstart source line, and only after codegen. `check` is the fast inner loop, so it is where an unresolved call has to surface.",
+        fix: "Declare the helper with `fn name(…) -> … { … }` — free functions are visible from every module, so there is nothing to import — or fix the spelling. Entities are constructed with `Entity.create(id, { … })`, not by calling the entity name.",
+    },
 ];
 
 #[cfg(test)]

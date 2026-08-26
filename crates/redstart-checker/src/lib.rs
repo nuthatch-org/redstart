@@ -217,6 +217,13 @@ fn analyze(
                 .map(|t| (f.name.name.clone(), resolve_type(t, &entities)))
         })
         .collect();
+    // Every declared free function, by name — including the ones with no return
+    // type, which `fn_returns` drops. This is the resolution set for a bare call.
+    let fn_names: HashSet<String> = modules
+        .iter()
+        .flat_map(|m| &m.program.functions)
+        .map(|f| f.name.name.clone())
+        .collect();
 
     for (m, file) in modules.iter().zip(&files) {
         for i in &m.program.interfaces {
@@ -263,6 +270,7 @@ fn analyze(
                 &source_network,
                 &data_source_names,
                 &fn_returns,
+                &fn_names,
                 &mut abis,
                 file,
                 &mut diags,
@@ -276,6 +284,7 @@ fn analyze(
                 &entities,
                 &entity_meta,
                 &fn_returns,
+                &fn_names,
                 &abis,
                 file,
                 &mut diags,
@@ -589,6 +598,7 @@ fn check_handler(
     source_network: &HashMap<String, String>,
     data_sources: &HashMap<String, ()>,
     fn_returns: &HashMap<String, RTy>,
+    fn_names: &HashSet<String>,
     abis: &mut AbiIndex,
     file: &str,
     diags: &mut Vec<Diag>,
@@ -706,6 +716,7 @@ fn check_handler(
         params_known,
         call_outputs: outputs,
         fn_returns,
+        fn_names,
         abis,
     };
     let mut locals: HashMap<String, RTy> = HashMap::new();
@@ -740,6 +751,7 @@ fn check_fn(
     entities: &HashMap<String, EntityInfo>,
     meta: &HashMap<String, EntityMeta>,
     fn_returns: &HashMap<String, RTy>,
+    fn_names: &HashSet<String>,
     abis: &AbiIndex,
     file: &str,
     diags: &mut Vec<Diag>,
@@ -755,6 +767,7 @@ fn check_fn(
         params_known: false,
         call_outputs: HashMap::new(),
         fn_returns,
+        fn_names,
         abis,
     };
     let mut locals: HashMap<String, RTy> = func
@@ -811,6 +824,9 @@ struct BodyCtx<'a> {
     call_outputs: HashMap<String, RTy>,
     /// Free-function name -> resolved return type.
     fn_returns: &'a HashMap<String, RTy>,
+    /// Every declared free function name, for resolving bare calls. Wider than
+    /// `fn_returns`, which only holds the ones that declare a return type.
+    fn_names: &'a HashSet<String>,
     abis: &'a AbiIndex,
 }
 
@@ -2230,6 +2246,7 @@ fn check_expr(
                     }
                 }
             }
+            check_unresolved_call(callee, ctx, locals, file, diags);
             check_expr(callee, ctx, locals, file, diags);
             for a in args {
                 check_expr(a, ctx, locals, file, diags);
@@ -2241,8 +2258,90 @@ fn check_expr(
                 check_expr(v, ctx, locals, file, diags);
             }
         }
+        Expr::Array { elems, .. } => {
+            for e in elems {
+                check_expr(e, ctx, locals, file, diags);
+            }
+        }
+        Expr::Index { base, index, .. } => {
+            check_expr(base, ctx, locals, file, diags);
+            check_expr(index, ctx, locals, file, diags);
+        }
         _ => {}
     }
+}
+
+/// E072: a bare `name(…)` call that resolves to nothing.
+///
+/// `check` is the fast inner loop — it is what `redstart dev` re-runs on save and
+/// what `check --json` hands an agent — and an unresolved call is the single most
+/// common thing a half-finished port has. Until this existed only `verify` caught
+/// it, as an AssemblyScript `Cannot find name` from deep inside `graph build`.
+///
+/// Deliberately narrow, because a false positive here would be worse than the
+/// gap: only single-segment callees are judged. A module-qualified `helpers::f(…)`
+/// is left alone, and every other call shape (`Entity.create`, `<Contract>.bind`,
+/// `<Template>.create`, `log.info`, `BigInt.fromI32`) is an `Expr::Field` callee
+/// and never reaches here.
+fn check_unresolved_call(
+    callee: &Expr,
+    ctx: &BodyCtx,
+    locals: &HashMap<String, RTy>,
+    file: &str,
+    diags: &mut Vec<Diag>,
+) {
+    let Expr::Path { segments, span } = callee else {
+        return;
+    };
+    let [seg] = segments.as_slice() else {
+        return;
+    };
+    let name = seg.name.as_str();
+
+    // `Some(x)` is `Option` sugar, not a function — it lowers to the identity.
+    if name == "Some" {
+        return;
+    }
+    if ctx.fn_names.contains(name) {
+        return;
+    }
+    // A local or the handler parameter being called is a different mistake
+    // (there are no function values in Redstart), and not one to mislabel.
+    if locals.contains_key(name) || name == ctx.event_param {
+        return;
+    }
+
+    // An entity name reached as a call is nearly always a reach for a
+    // constructor, so say where the constructor actually lives.
+    let help = if ctx.entities.contains_key(name) {
+        format!(
+            "`{name}` is an entity, not a function — construct it with `{name}.create(id, {{ … }})` or `{name}.loadOrCreate(id, {{ … }})`"
+        )
+    // `min` rather than `find`: hash-set order is not stable, and a compiler's
+    // diagnostics should not vary between runs of the same source.
+    } else if let Some(near) = ctx
+        .fn_names
+        .iter()
+        .filter(|f| f.eq_ignore_ascii_case(name))
+        .min()
+    {
+        format!("did you mean `{near}`? — names are case-sensitive")
+    } else {
+        format!(
+            "declare it with `fn {name}(…) -> … {{ … }}` — free functions are visible from every module in the project, so there is nothing to import"
+        )
+    };
+
+    diags.push(
+        Diag::new(
+            file,
+            span,
+            "E072",
+            format!("call to undefined function `{name}`"),
+            "no such function",
+        )
+        .with_help(help),
+    );
 }
 
 /// Known non-deterministic host calls (`namespace.method`). Returns the fix-it
