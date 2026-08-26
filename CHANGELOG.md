@@ -6,6 +6,20 @@ pulls the section matching each tag into the GitHub Release notes.
 
 ## [Unreleased]
 
+Found by porting the PancakeSwap Infinity CL subgraph (a real 2,097-line
+AssemblyScript subgraph, not an example) in `nightswatchhq/pancakeswap-infinity-cl-redstart`.
+
+### Fixed
+- **`Some(x)` was emitted as a call to an undefined function.** An `Option<T>` lowers to graph-ts's `T | null`, so `Some` is the identity constructor. It fell through to the generic call path instead and emitted `Some(x)` literally, which `check` accepted and only `graph build` rejected. `None` was already handled.
+- **Matching an `Option` emitted a loose `!= null`, crashing the AssemblyScript compiler.** graph-ts gives `BigInt`, `BigDecimal`, `Bytes` and `Address` an `@operator('!=')` taking two of themselves, so comparing one to `null` sends `asc` into `compileBinaryOverload`, where it fails an internal assertion and aborts the whole build with no line number and no recoverable diagnostic. Null tests are now strict `!==`, which skips overload resolution and is the correct test for a nullable reference. Any subgraph with a nullable `BigInt` field - a nullable `tick` is the common one - hit this.
+- **`Entity.create(…)` / `Entity.loadOrCreate(…)` only lowered in `let` position.** As a bare statement (`Swap.create(id, { … })`, the "record this event and move on" shape) or in a `return`, it emitted `Entity.create(id, /* record */)` - a static graph-ts does not have, with the record literal replaced by a comment. Both positions now expand into a temporary, guarded so that `<Template>.create(addr)` still spawns a data source: in statement position the two are textually identical.
+
+### Added
+- **`redstart test`: the `log` namespace.** `log.debug`/`info`/`warning`/`error` evaluate their arguments and yield unit; `log.critical` fails the test, since in graph-node it terminates the handler. A handler that logged could not be tested at all before.
+- **`redstart test`: the transaction fields the porting guide documents.** `.from`, `.to`, `.value` and `.gasPrice` (plus `gasLimit`, `gasUsed`, `nonce`, `index`) on the mock transaction, which carried only `.hash`.
+- **`redstart test`: numeric and string surface.** `BigInt.fromI32`/`fromString`/`fromByteArray` and `BigDecimal.fromString`; `pow`, `mod`, `leftShift`, `rightShift`, `neg`, `equals`/`notEqual`/`lt`/`gt`/`le`/`ge`; `BigDecimal` arithmetic, which previously fell through to the `BigInt` path and silently failed; `startsWith`, `endsWith`, `includes`, `slice`, `charAt`, `concat`, `split`, `toLowerCase`, `toUpperCase`, and `.length` on strings and byte strings; `push` on arrays. Any subgraph doing real arithmetic was untestable natively.
+- **`assertMissing(Entity, id)`.** Asserts an entity was *not* written. A test that only checks a handler did not abort asserts nothing; this is what makes it a test.
+
 ## [0.16.0] - 2026-08-10
 
 The porting release.

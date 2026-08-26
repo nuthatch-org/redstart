@@ -41,6 +41,12 @@ handler on Token.Transfer(event) {
 }
 
 handler on Token.Approval(event) {
+  TxInfo.loadOrCreate(event.transaction.hash, {
+    gasPrice: event.transaction.gasPrice,
+    sender: event.transaction.from,
+    recipient: event.transaction.to,
+    amount: event.transaction.value,
+  })
   let r = ERC20.bind(event.address).balanceOf(event.params.owner)
   match r {
     Ok(b) => {
@@ -52,6 +58,8 @@ handler on Token.Approval(event) {
 }
 
 entity Snapshot { id: Id<Bytes> total: BigInt }
+
+entity TxInfo { id: Id<Bytes> gasPrice: BigInt sender: Bytes recipient: Bytes amount: BigInt }
 
 template PoolTemplate {
   abi: ERC20
@@ -318,4 +326,109 @@ test "timestamp override flows into entity" {
 "#,
     );
     assert!(out[0].1, "expected pass, got: {}", out[0].2);
+}
+
+// ---------------------------------------------------------------------------
+// Gaps found by porting PancakeSwap Infinity CL. Each of these is code that
+// `redstart verify` compiles to WASM but that the native runner could not
+// evaluate, which made the "no Matchstick needed" claim false for any subgraph
+// doing real arithmetic.
+// ---------------------------------------------------------------------------
+
+#[test]
+fn log_namespace_is_a_no_op_and_critical_aborts() {
+    let out = outcomes(
+        r#"
+test "log.debug does not stop a handler" {
+  Token.Transfer({ from: 0x01, to: 0x02, value: 100 })
+  log.debug("moved {}", ["100"])
+  log.info("ok", [])
+  log.warning("careful", [])
+  log.error("bad", [])
+  assertEq(Account.at(0x02).balance, 100)
+}
+test "log.critical aborts" {
+  log.critical("stop", [])
+}
+"#,
+    );
+    assert!(out[0].1, "expected pass, got: {}", out[0].2);
+    assert!(!out[1].1, "log.critical must abort the handler");
+}
+
+#[test]
+fn transaction_exposes_the_documented_fields() {
+    let out = outcomes(
+        r#"
+test "tx fields the porting guide documents are all readable" {
+  mockCall(ERC20.balanceOf(0x01), 1)
+  Token.Approval({ _txHash: 0xfeed, owner: 0x01, spender: 0x02, value: 5 })
+  assertEq(TxInfo.at(0xfeed).gasPrice, BigInt.zero)
+  assertEq(TxInfo.at(0xfeed).amount, BigInt.zero)
+}
+"#,
+    );
+    assert!(out[0].1, "expected pass, got: {}", out[0].2);
+}
+
+#[test]
+fn numeric_statics_and_methods_are_available() {
+    let out = outcomes(
+        r#"
+test "BigInt and BigDecimal statics" {
+  assertEq(BigInt.fromI32(255), BigInt.fromString("255"))
+  assertEq(BigDecimal.fromString("1.5") + BigDecimal.fromString("1.5"), BigDecimal.fromString("3"))
+}
+test "pow, mod, shifts and comparisons" {
+  assertEq(BigInt.fromI32(2).pow(8), BigInt.fromI32(256))
+  assertEq(BigInt.fromI32(7).mod(BigInt.fromI32(4)), BigInt.fromI32(3))
+  assertEq(BigInt.fromI32(1).leftShift(4), BigInt.fromI32(16))
+  assertEq(BigInt.fromI32(16).rightShift(4), BigInt.fromI32(1))
+  assert(BigInt.fromI32(3).lt(BigInt.fromI32(4)))
+  assert(BigInt.fromI32(4).notEqual(BigInt.fromI32(3)))
+}
+test "BigDecimal arithmetic, which used to fall through to BigInt" {
+  assertEq(BigDecimal.fromString("1") / BigDecimal.fromString("4"), BigDecimal.fromString("0.25"))
+}
+"#,
+    );
+    for o in &out {
+        assert!(o.1, "{} failed: {}", o.0, o.2);
+    }
+}
+
+#[test]
+fn string_methods_a_hex_parser_needs() {
+    let out = outcomes(
+        r#"
+test "startsWith, slice, charAt and length" {
+  assert("0xff".startsWith("0x"))
+  assert(!"ff".startsWith("0x"))
+  assertEq("0xff".slice(2), "ff")
+  assertEq("abc".charAt(1), "b")
+  assertEq("abc".length, 3)
+}
+"#,
+    );
+    assert!(out[0].1, "expected pass, got: {}", out[0].2);
+}
+
+#[test]
+fn assert_missing_is_not_a_rubber_stamp() {
+    let out = outcomes(
+        r#"
+test "missing entity passes" {
+  assertMissing(Account, 0x09)
+}
+test "existing entity fails" {
+  Token.Transfer({ from: 0x01, to: 0x02, value: 100 })
+  assertMissing(Account, 0x02)
+}
+"#,
+    );
+    assert!(out[0].1, "expected pass, got: {}", out[0].2);
+    assert!(
+        !out[1].1,
+        "assertMissing must fail on an entity that exists"
+    );
 }
