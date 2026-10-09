@@ -6,17 +6,17 @@ Redstart ships pre-built binaries for macOS (arm64/x86_64) and Linux
 ## Quick install
 
 ```sh
-curl -fsSL https://raw.githubusercontent.com/nightswatchhq/redstart/main/scripts/install.sh | sh
+curl -fsSL https://raw.githubusercontent.com/nuthatch-org/redstart/main/scripts/install.sh | sh
 ```
 
 This downloads the binary for your platform from the latest
-[release](https://github.com/nightswatchhq/redstart/releases), verifies its
+[release](https://github.com/nuthatch-org/redstart/releases), verifies its
 sha256, and installs it to `~/.local/bin` (override with `REDSTART_BIN_DIR`).
 
 ## Homebrew
 
 ```sh
-brew install nightswatchhq/tap/redstart
+brew install nuthatch-org/tap/redstart
 ```
 
 ## Cargo
@@ -24,7 +24,7 @@ brew install nightswatchhq/tap/redstart
 If you'd rather build from source (needs a recent stable Rust):
 
 ```sh
-cargo install --git https://github.com/nightswatchhq/redstart redstart-cli
+cargo install --git https://github.com/nuthatch-org/redstart redstart-cli
 ```
 
 ## Verify

@@ -230,5 +230,5 @@ cheapest check available, and it is the only one you can run yourself.
 `redstart check` catching a mistake is the good case, and `redstart verify`
 failing is the acceptable one. A generated mapping that fails `graph build`
 without either of them complaining is a bug in Redstart, please
-[open an issue](https://github.com/nightswatchhq/redstart/issues) with the
+[open an issue](https://github.com/nuthatch-org/redstart/issues) with the
 smallest `.red` file that reproduces it.

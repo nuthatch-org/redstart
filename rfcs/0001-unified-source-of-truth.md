@@ -33,7 +33,7 @@ type-checks end to end. So we build one.
 You write `.red` modules declaring entities, ABIs, sources, handlers, helpers, and
 tests. The compiler resolves names across every module and checks them against one
 another. `redstart build` projects the unified AST into the three canonical files.
-See [the book](https://github.com/nightswatchhq/redstart) for the language tour.
+See [the book](https://github.com/nuthatch-org/redstart) for the language tour.
 
 ## Reference-level explanation
 

@@ -7,7 +7,7 @@ pulls the section matching each tag into the GitHub Release notes.
 ## [Unreleased]
 
 Found by porting the PancakeSwap Infinity CL subgraph (a real 2,097-line
-AssemblyScript subgraph, not an example) in `nightswatchhq/pancakeswap-infinity-cl-redstart`.
+AssemblyScript subgraph, not an example) in `nuthatch-org/pancakeswap-infinity-cl-redstart`.
 
 ### Fixed
 - **`Some(x)` was emitted as a call to an undefined function.** An `Option<T>` lowers to graph-ts's `T | null`, so `Some` is the identity constructor. It fell through to the generic call path instead and emitted `Some(x)` literally, which `check` accepted and only `graph build` rejected. `None` was already handled.
@@ -41,7 +41,7 @@ The porting release.
 - **`Boolean` is accepted** alongside `Bool`, because that is what every `schema.graphql` says. The checker used to reject it while its own error text recommended it.
 - **`E057`, unknown trigger parameter.** `event.params.x` (or `call.inputs.x`) naming something the ABI doesn't declare is now an error listing the real parameter names, instead of passing through to fail at `graph build`. Unnamed ABI inputs are `param0`, `param1`, … exactly as `graph codegen` names them.
 - **`E055`, `.save()` teaches instead of confusing.** It used to report "`X` has no field `save`". It now explains that entities dirty-track and save themselves. The catalogue is 35 codes (29 errors, 6 warnings).
-- **[Porting an existing subgraph](https://nightswatchhq.github.io/redstart/porting.html)**, a book chapter covering the schema and mapping translation tables, exactly what an event handler can see (and that `event.receipt` is not available), the transaction-keyed staging-entity pattern that replaces receipt inspection, multi-source event names, and multi-network deployment.
+- **[Porting an existing subgraph](https://nuthatch-org.github.io/redstart/porting.html)**, a book chapter covering the schema and mapping translation tables, exactly what an event handler can see (and that `event.receipt` is not available), the transaction-keyed staging-entity pattern that replaces receipt inspection, multi-source event names, and multi-network deployment.
 - `redstart new` writes a fuller `.gitignore`, and `redstart build` says plainly that its output is generated.
 
 ## [0.15.0] - 2026-07-10
@@ -278,5 +278,5 @@ Stage 0 — foundations. The first end-to-end vertical slice.
 - Release pipeline: cross-compiled binaries (macOS arm64/x86_64,
   Linux x86_64/arm64) to GitHub Releases + Homebrew tap.
 
-[Unreleased]: https://github.com/nightswatchhq/redstart/compare/v0.1.0...HEAD
-[0.1.0]: https://github.com/nightswatchhq/redstart/releases/tag/v0.1.0
+[Unreleased]: https://github.com/nuthatch-org/redstart/compare/v0.1.0...HEAD
+[0.1.0]: https://github.com/nuthatch-org/redstart/releases/tag/v0.1.0

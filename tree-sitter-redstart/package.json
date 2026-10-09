@@ -2,7 +2,7 @@
   "name": "tree-sitter-redstart",
   "version": "0.1.0",
   "description": "Tree-sitter grammar for the Redstart subgraph language",
-  "repository": "https://github.com/nightswatchhq/redstart",
+  "repository": "https://github.com/nuthatch-org/redstart",
   "license": "MIT",
   "main": "bindings/node",
   "keywords": ["tree-sitter", "parser", "redstart", "the-graph", "subgraph"],

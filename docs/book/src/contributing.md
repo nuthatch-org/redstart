@@ -5,7 +5,7 @@ Redstart is a public good and contributions are welcome.
 ## Building from source
 
 ```sh
-git clone https://github.com/nightswatchhq/redstart
+git clone https://github.com/nuthatch-org/redstart
 cd redstart
 cargo build
 cargo test
@@ -35,6 +35,6 @@ RFCs live in [`rfcs/`][rfcs] in the repository. To propose one:
 See [`rfcs/README.md`][rfcs] for the full lifecycle, and
 [RFC-0001][rfc1] for the foundational design rationale.
 
-[rfcs]: https://github.com/nightswatchhq/redstart/tree/main/rfcs
-[tmpl]: https://github.com/nightswatchhq/redstart/blob/main/rfcs/0000-template.md
-[rfc1]: https://github.com/nightswatchhq/redstart/blob/main/rfcs/0001-unified-source-of-truth.md
+[rfcs]: https://github.com/nuthatch-org/redstart/tree/main/rfcs
+[tmpl]: https://github.com/nuthatch-org/redstart/blob/main/rfcs/0000-template.md
+[rfc1]: https://github.com/nuthatch-org/redstart/blob/main/rfcs/0001-unified-source-of-truth.md
