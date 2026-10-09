@@ -334,7 +334,7 @@ There are **two** MCP layers in a Redstart agent story; they don't compete.
   maintained. An agent authoring a subgraph wants these too — to find a reference
   deployment, crib a schema, and **verify its freshly-deployed Redstart subgraph
   returns the right data**. Recommend them as companions now; only **fork
-  `graphops/subgraph-mcp` into `nightswatchhq`** once we want a Redstart-specific
+  `graphops/subgraph-mcp` into `nuthatch-org`** once we want a Redstart-specific
   tool such as *"diff my live deployment against my `.red` source"* — a natural
   extension of the kill-gate, but step 2, not step 1.
 

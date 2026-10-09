@@ -16,7 +16,7 @@ resolver = "2"
 version = "0.16.0"
 edition = "2021"
 license = "MIT"
-repository = "https://github.com/nightswatchhq/redstart"
+repository = "https://github.com/nuthatch-org/redstart"
 authors = ["The Lodestar Team"]
 
 [workspace.dependencies]

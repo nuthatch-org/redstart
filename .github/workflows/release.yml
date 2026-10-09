@@ -90,7 +90,7 @@ jobs:
         env:
           GH_TOKEN: ${{ secrets.HOMEBREW_TAP_TOKEN }}
           # Override these repository/org variables if your tap lives elsewhere.
-          TAP_REPO: ${{ vars.HOMEBREW_TAP_REPO || 'nightswatchhq/homebrew-tap' }}
+          TAP_REPO: ${{ vars.HOMEBREW_TAP_REPO || 'nuthatch-org/homebrew-tap' }}
           OWNER_REPO: ${{ github.repository }}
         run: |
           set -euo pipefail

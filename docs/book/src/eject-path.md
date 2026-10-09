@@ -43,4 +43,4 @@ tiers:
    fixed block. Our lowered AssemblyScript must produce a store *identical* to
    idiomatic hand-written AssemblyScript.
 
-[conf]: https://github.com/nightswatchhq/redstart/tree/main/conformance
+[conf]: https://github.com/nuthatch-org/redstart/tree/main/conformance

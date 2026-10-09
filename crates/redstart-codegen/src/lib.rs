@@ -817,7 +817,7 @@ handler on Token.Transfer(event) {
         );
     }
 
-    /// Found by porting PancakeSwap Infinity CL (nightswatchhq/pancakeswap-
+    /// Found by porting PancakeSwap Infinity CL (nuthatch-org/pancakeswap-
     /// infinity-cl-redstart). Three separate emissions that `check` accepted and
     /// only `graph build` rejected, which is exactly the bug class the porting
     /// guide asks to be reported.

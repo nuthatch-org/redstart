@@ -4,10 +4,10 @@ version = "0.1.0"
 schema_version = 1
 authors = ["The Lodestar Team"]
 description = "Redstart language support — The Graph subgraphs: syntax highlighting (tree-sitter) + LSP."
-repository = "https://github.com/nightswatchhq/redstart"
+repository = "https://github.com/nuthatch-org/redstart"
 
 [grammars.redstart]
-repository = "https://github.com/nightswatchhq/redstart"
+repository = "https://github.com/nuthatch-org/redstart"
 # The tree-sitter grammar lives in a subdirectory of the main repo.
 path = "tree-sitter-redstart"
 # Pin to the commit that contains the generated grammar (filled on release).

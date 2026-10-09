@@ -11,7 +11,7 @@ import {
   AS_MANIFEST,
 } from "@/lib/samples";
 
-const REPO = "https://github.com/nightswatchhq/redstart";
+const REPO = "https://github.com/nuthatch-org/redstart";
 
 const FOOTGUNS = [
   {

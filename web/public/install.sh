@@ -1,7 +1,7 @@
 #!/usr/bin/env sh
 # Redstart installer.
 #
-#   curl -fsSL https://raw.githubusercontent.com/nightswatchhq/redstart/main/scripts/install.sh | sh
+#   curl -fsSL https://raw.githubusercontent.com/nuthatch-org/redstart/main/scripts/install.sh | sh
 #
 # Downloads the pre-built `redstart` binary for your platform from the latest
 # GitHub Release, verifies its sha256, and installs it. No Rust required.
@@ -9,10 +9,10 @@
 # Environment overrides:
 #   REDSTART_VERSION  tag to install (default: latest, e.g. v0.1.0)
 #   REDSTART_BIN_DIR  install directory (default: ~/.local/bin)
-#   REDSTART_REPO     owner/repo (default: nightswatchhq/redstart)
+#   REDSTART_REPO     owner/repo (default: nuthatch-org/redstart)
 set -eu
 
-REPO="${REDSTART_REPO:-nightswatchhq/redstart}"
+REPO="${REDSTART_REPO:-nuthatch-org/redstart}"
 BIN_DIR="${REDSTART_BIN_DIR:-$HOME/.local/bin}"
 
 err() { printf '\033[1;31merror:\033[0m %s\n' "$1" >&2; exit 1; }

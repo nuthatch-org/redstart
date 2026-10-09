@@ -40,7 +40,7 @@ handler on Token.Transfer(event) {
 `mappings.ts`. The event signature in the manifest is derived from the ABI *by
 reference* — rename the event and it's a **compile** error, not a runtime one.
 
-> **Try it now** — the [playground](https://nightswatchhq.github.io/redstart/playground/)
+> **Try it now** — the [playground](https://nuthatch-org.github.io/redstart/playground/)
 > runs the real compiler in your browser: write `.red`, watch the generated
 > AssemblyScript, schema, and manifest update as you type.
 

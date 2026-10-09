@@ -8,8 +8,8 @@ src = "src"
 [output.html]
 default-theme = "ayu"
 preferred-dark-theme = "ayu"
-git-repository-url = "https://github.com/nightswatchhq/redstart"
-edit-url-template = "https://github.com/nightswatchhq/redstart/edit/main/docs/book/{path}"
+git-repository-url = "https://github.com/nuthatch-org/redstart"
+edit-url-template = "https://github.com/nuthatch-org/redstart/edit/main/docs/book/{path}"
 
 [output.html.fold]
 enable = true

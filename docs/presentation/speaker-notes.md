@@ -531,7 +531,7 @@ v0.10.0 release. Use these numbers with confidence.
 | Immutable inference | up to ~19% faster indexing / ~48% less disk (Edge & Node) |
 | graph-node prune default | `prune: never`; Redstart emits `prune: auto` |
 | Live site | https://redstart-lang.com |
-| Source | https://github.com/nightswatchhq/redstart |
+| Source | https://github.com/nuthatch-org/redstart |
 
 The diagnostic codes referenced on slide 3: E062 (nullable deref), E061
 (arithmetic on `Option`), E060 (`.value` of an unmatched call), E051 (incomplete
