@@ -133,6 +133,18 @@ impl<'t> Parser<'t> {
                 self.span(sp.start, sp.end),
             ))
         } else {
+            if let Some(kw) = self.peek_kind().filter(|&k| is_keyword(k)) {
+                let word = kw.describe();
+                return Err(self
+                    .err(
+                        format!("expected an identifier {context}, found the keyword {word}"),
+                        format!("{word} is a reserved word"),
+                    )
+                    .with_help(format!(
+                        "pick another name here, e.g. `{}_`",
+                        word.trim_matches('`')
+                    )));
+            }
             let found = self
                 .peek_kind()
                 .map_or_else(|| "end of input".to_string(), |k| k.describe().to_string());
@@ -1560,5 +1572,17 @@ handler on C.E(event) {
         assert!(!errors.is_empty());
         // Recovery should still find the second, well-formed entity.
         assert!(program.entities.iter().any(|e| e.name.name == "Good"));
+    }
+
+    #[test]
+    fn keyword_as_binding_name_says_it_is_reserved() {
+        let src = "fn f() { let from = 1 }";
+        let lexed = lex(src).expect("lex");
+        let (_, errors) = parse(lexed.tokens(), Arc::from(src));
+        assert_eq!(errors[0].label, "`from` is a reserved word");
+        assert_eq!(
+            errors[0].help.as_deref(),
+            Some("pick another name here, e.g. `from_`")
+        );
     }
 }
