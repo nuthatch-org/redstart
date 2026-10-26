@@ -13,20 +13,20 @@ members = [
 resolver = "2"
 
 [workspace.package]
-version = "0.16.0"
+version = "0.17.0"
 edition = "2021"
 license = "MIT"
 repository = "https://github.com/nuthatch-org/redstart"
 authors = ["The Lodestar Team"]
 
 [workspace.dependencies]
-redstart-parser = { path = "crates/redstart-parser", version = "0.16.0" }
-redstart-loader = { path = "crates/redstart-loader", version = "0.16.0" }
-redstart-checker = { path = "crates/redstart-checker", version = "0.16.0" }
-redstart-codegen = { path = "crates/redstart-codegen", version = "0.16.0" }
-redstart-test = { path = "crates/redstart-test", version = "0.16.0" }
-redstart-lsp = { path = "crates/redstart-lsp", version = "0.16.0" }
-redstart-mcp = { path = "crates/redstart-mcp", version = "0.16.0" }
+redstart-parser = { path = "crates/redstart-parser", version = "0.17.0" }
+redstart-loader = { path = "crates/redstart-loader", version = "0.17.0" }
+redstart-checker = { path = "crates/redstart-checker", version = "0.17.0" }
+redstart-codegen = { path = "crates/redstart-codegen", version = "0.17.0" }
+redstart-test = { path = "crates/redstart-test", version = "0.17.0" }
+redstart-lsp = { path = "crates/redstart-lsp", version = "0.17.0" }
+redstart-mcp = { path = "crates/redstart-mcp", version = "0.17.0" }
 logos = "0.14"
 miette = { version = "7", features = ["fancy"] }
 thiserror = "2"
