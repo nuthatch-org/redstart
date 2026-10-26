@@ -758,14 +758,52 @@ fn some_is_option_sugar_and_not_an_undefined_call() {
 }
 
 #[test]
-fn a_module_qualified_call_is_left_alone() {
-    // The check is deliberately narrow: only single-segment callees are judged,
-    // so a `mod::fn(…)` shape is never a false positive here.
+fn a_module_qualified_call_resolves_against_its_module() {
     let main = format!(
         "{PREAMBLE}\nmod helpers;\nhandler on Token.Transfer(event) {{\n  let d = helpers::double(event.params.value)\n}}\n"
     );
     let helpers = "fn double(x: BigInt) -> BigInt {\n  return x + x\n}\n";
     assert!(run_two_module(&main, helpers).is_ok());
+}
+
+#[test]
+fn a_qualifier_naming_the_wrong_module_is_rejected() {
+    // `double` exists, but not in a module called `accounts`.
+    let main = format!(
+        "{PREAMBLE}\nmod helpers;\nhandler on Token.Transfer(event) {{\n  let d = accounts::double(event.params.value)\n}}\n"
+    );
+    let helpers = "fn double(x: BigInt) -> BigInt {\n  return x + x\n}\n";
+    let errs = run_two_module(&main, helpers).expect_err("expected a check error");
+    let joined = errs.join("\n");
+    assert!(
+        joined.contains("call to undefined function `accounts::double`"),
+        "{joined}"
+    );
+    assert!(joined.contains("call it bare as `double(…)`"), "{joined}");
+}
+
+#[test]
+fn a_qualified_call_to_a_missing_function_is_rejected() {
+    let main = format!(
+        "{PREAMBLE}\nmod helpers;\nhandler on Token.Transfer(event) {{\n  let d = helpers::triple(event.params.value)\n}}\n"
+    );
+    let helpers = "fn double(x: BigInt) -> BigInt {\n  return x + x\n}\n";
+    assert_err_contains(
+        run_two_module(&main, helpers),
+        "call to undefined function `helpers::triple`",
+    );
+}
+
+#[test]
+fn a_function_declared_in_two_modules_is_rejected() {
+    // The output is one flat mappings.ts, where two `double`s collide.
+    let main =
+        format!("{PREAMBLE}\nmod helpers;\nfn double(x: BigInt) -> BigInt {{\n  return x\n}}\n");
+    let helpers = "fn double(x: BigInt) -> BigInt {\n  return x + x\n}\n";
+    assert_err_contains(
+        run_two_module(&main, helpers),
+        "duplicate function `double`",
+    );
 }
 
 #[test]

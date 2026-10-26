@@ -432,3 +432,40 @@ test "existing entity fails" {
         "assertMissing must fail on an entity that exists"
     );
 }
+
+#[test]
+fn failure_location_names_the_module_that_failed() {
+    let dir = tempfile::tempdir().unwrap();
+    fs::create_dir_all(dir.path().join("src/abis")).unwrap();
+    fs::write(
+        dir.path().join("redstart.toml"),
+        "[project]\nname=\"t\"\nentry=\"src/main.red\"",
+    )
+    .unwrap();
+    fs::write(dir.path().join("src/abis/ERC20.json"), ABI).unwrap();
+    fs::write(
+        dir.path().join("src/main.red"),
+        r#"mod checks;
+abi ERC20 from "./abis/ERC20.json"
+source Token { abi: ERC20 network: mainnet address: 0x00 startBlock: 1 }
+handler on Token.Transfer(event) {
+  log.critical("boom", [])
+}
+"#,
+    )
+    .unwrap();
+    fs::write(
+        dir.path().join("src/checks.red"),
+        "test \"handler aborts\" {\n  Token.Transfer({ from: 0x01, to: 0x02, value: 1 })\n}\n",
+    )
+    .unwrap();
+
+    let tree = redstart_loader::load(dir.path()).unwrap();
+    let checked = redstart_checker::check(&tree).expect("program should pass the checker");
+    let report = run_tests(&tree, &checked);
+    let Outcome::Fail { location, .. } = &report.results[0].outcome else {
+        panic!("expected the test to fail");
+    };
+    let location = location.as_deref().unwrap();
+    assert!(location.contains("main.red:5:"), "got {location}");
+}

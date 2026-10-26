@@ -32,6 +32,11 @@ sibling `name.red` or a nested `name/mod.red`, with cycle detection.
 Free `fn` declarations factor out shared logic. They lower to AssemblyScript
 functions, work across modules, and return typed values.
 
+A helper is visible from every module, so the bare `normalize(x)` works
+anywhere. `math::normalize(x)` also works and is checked against the module it
+names. Names must be unique across the project, since every helper ends up in
+the same generated file.
+
 ```redstart
 fn normalize(amount: BigInt, decimals: i32) -> BigDecimal {
   return amount.toBigDecimal() / exponent(decimals)

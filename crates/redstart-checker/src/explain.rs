@@ -283,9 +283,16 @@ static EXPLANATIONS: &[Explanation] = &[
     Explanation {
         code: "E072",
         title: "call to undefined function",
-        summary: "A bare `name(…)` call named no declared `fn`, in this module or any other.",
+        summary: "A call named no declared `fn`: a bare `name(…)` matched none in any module, or a qualified `module::name(…)` matched none in that module.",
         prevents: "A half-finished port passing `check` and then failing deep inside `graph build` with an AssemblyScript `Cannot find name` — no Redstart source line, and only after codegen. `check` is the fast inner loop, so it is where an unresolved call has to surface.",
         fix: "Declare the helper with `fn name(…) -> … { … }` — free functions are visible from every module, so there is nothing to import — or fix the spelling. Entities are constructed with `Entity.create(id, { … })`, not by calling the entity name.",
+    },
+    Explanation {
+        code: "E073",
+        title: "duplicate function",
+        summary: "Two `fn` declarations share a name, in the same module or in different ones.",
+        prevents: "Every helper is emitted into one flat `mappings.ts`, so two of the same name collide there and `graph build` fails with a duplicate identifier.",
+        fix: "Rename one of them. A module qualifier (`accounts::double`) picks the declaring module but cannot tell two same-named functions apart.",
     },
 ];
 

@@ -31,6 +31,7 @@ use redstart_parser::ast::{BinOp, Block, Expr, ForIter, HandlerDecl, HandlerKind
 use redstart_parser::Span;
 use std::collections::{BTreeMap, HashMap};
 use std::str::FromStr;
+use std::sync::Arc;
 use value::value_eq;
 
 /// The outcome of one test.
@@ -83,11 +84,15 @@ impl TestReport {
 #[must_use]
 pub fn run_tests(tree: &ModuleTree, _checked: &Checked) -> TestReport {
     let interp = Interp::build(tree);
+    let files: Vec<(Arc<str>, String)> = tree
+        .ordered()
+        .iter()
+        .map(|m| (Arc::clone(&m.source), m.file_path.display().to_string()))
+        .collect();
     let mut results = Vec::new();
     for module in tree.ordered() {
-        let file = module.file_path.display().to_string();
         for t in &module.program.tests {
-            let outcome = interp.run_test(&t.body, &file);
+            let outcome = interp.run_test(&t.body, &files);
             results.push(TestResult {
                 name: t.name.clone(),
                 outcome,
@@ -218,7 +223,7 @@ impl<'t> Interp<'t> {
         }
     }
 
-    fn run_test(&self, body: &Block, file: &str) -> Outcome {
+    fn run_test(&self, body: &Block, files: &[(Arc<str>, String)]) -> Outcome {
         let mut world = World {
             store: HashMap::new(),
             mocks: HashMap::new(),
@@ -234,8 +239,13 @@ impl<'t> Interp<'t> {
             Ok(()) => Outcome::Pass,
             Err(e) => Outcome::Fail {
                 message: e.message,
+                // A failure can sit in a handler or helper from another module.
                 location: e.span.map(|s| {
                     let (line, col) = s.line_col();
+                    let file = files
+                        .iter()
+                        .find(|(src, _)| Arc::ptr_eq(src, &s.source))
+                        .map_or("<unknown>", |(_, f)| f.as_str());
                     format!("{file}:{line}:{col}")
                 }),
             },
@@ -1021,9 +1031,9 @@ impl<'t> Interp<'t> {
         frame: &mut Frame,
         span: &Span,
     ) -> R<Value> {
-        // A bare call to a user helper function.
-        if let Some(name) = single_path(callee) {
-            if let Some(func) = self.fns.get(&name).copied() {
+        // A call to a user helper, bare or module-qualified (names are unique).
+        if let Expr::Path { segments, .. } = callee {
+            if let Some(func) = segments.last().and_then(|s| self.fns.get(&s.name)).copied() {
                 return self.invoke_fn(func, args, world, frame, span);
             }
         }

@@ -224,6 +224,39 @@ fn analyze(
         .flat_map(|m| &m.program.functions)
         .map(|f| f.name.name.clone())
         .collect();
+    // Every fn by its full path (`["accounts", "double"]`), for qualified calls.
+    let fn_paths: HashSet<Vec<String>> = modules
+        .iter()
+        .flat_map(|m| {
+            m.program.functions.iter().map(|f| {
+                let mut p = m.path.clone();
+                p.push(f.name.name.clone());
+                p
+            })
+        })
+        .collect();
+
+    // Functions are emitted flat into one mappings.ts, so a name can only be
+    // declared once across the whole project, whichever module it lives in.
+    let mut seen_fns: HashSet<&str> = HashSet::new();
+    for (m, file) in modules.iter().zip(&files) {
+        for f in &m.program.functions {
+            if !seen_fns.insert(f.name.name.as_str()) {
+                diags.push(
+                    Diag::new(
+                        file,
+                        &f.name.span,
+                        "E073",
+                        format!("duplicate function `{}`", f.name.name),
+                        "already declared",
+                    )
+                    .with_help(
+                        "each fn must have a unique name across all modules; rename one of them",
+                    ),
+                );
+            }
+        }
+    }
 
     for (m, file) in modules.iter().zip(&files) {
         for i in &m.program.interfaces {
@@ -272,6 +305,8 @@ fn analyze(
                 &data_source_names,
                 &fn_returns,
                 &fn_names,
+                &fn_paths,
+                &m.path,
                 &mut abis,
                 file,
                 &mut diags,
@@ -286,6 +321,8 @@ fn analyze(
                 &entity_meta,
                 &fn_returns,
                 &fn_names,
+                &fn_paths,
+                &m.path,
                 &abis,
                 file,
                 &mut diags,
@@ -600,6 +637,8 @@ fn check_handler(
     data_sources: &HashMap<String, ()>,
     fn_returns: &HashMap<String, RTy>,
     fn_names: &HashSet<String>,
+    fn_paths: &HashSet<Vec<String>>,
+    module: &[String],
     abis: &mut AbiIndex,
     file: &str,
     diags: &mut Vec<Diag>,
@@ -718,6 +757,8 @@ fn check_handler(
         call_outputs: outputs,
         fn_returns,
         fn_names,
+        fn_paths,
+        module,
         abis,
     };
     let mut locals: HashMap<String, RTy> = HashMap::new();
@@ -753,6 +794,8 @@ fn check_fn(
     meta: &HashMap<String, EntityMeta>,
     fn_returns: &HashMap<String, RTy>,
     fn_names: &HashSet<String>,
+    fn_paths: &HashSet<Vec<String>>,
+    module: &[String],
     abis: &AbiIndex,
     file: &str,
     diags: &mut Vec<Diag>,
@@ -769,6 +812,8 @@ fn check_fn(
         call_outputs: HashMap::new(),
         fn_returns,
         fn_names,
+        fn_paths,
+        module,
         abis,
     };
     let mut locals: HashMap<String, RTy> = func
@@ -828,7 +873,24 @@ struct BodyCtx<'a> {
     /// Every declared free function name, for resolving bare calls. Wider than
     /// `fn_returns`, which only holds the ones that declare a return type.
     fn_names: &'a HashSet<String>,
+    /// Every declared free function by full module path plus name.
+    fn_paths: &'a HashSet<Vec<String>>,
+    /// The path of the module whose body is being checked.
+    module: &'a [String],
     abis: &'a AbiIndex,
+}
+
+impl BodyCtx<'_> {
+    /// Resolve `a::b::f` to a declared fn, from the root or from this module.
+    fn resolves_qualified_fn(&self, segments: &[redstart_parser::Ident]) -> bool {
+        let names: Vec<String> = segments.iter().map(|s| s.name.clone()).collect();
+        if self.fn_paths.contains(&names) {
+            return true;
+        }
+        let mut relative = self.module.to_vec();
+        relative.extend(names);
+        self.fn_paths.contains(&relative)
+    }
 }
 
 fn check_block(
@@ -2294,6 +2356,32 @@ fn check_unresolved_call(
     let Expr::Path { segments, span } = callee else {
         return;
     };
+    if segments.len() > 1 {
+        if !ctx.resolves_qualified_fn(segments) {
+            let path = segments
+                .iter()
+                .map(|s| s.name.as_str())
+                .collect::<Vec<_>>()
+                .join("::");
+            let name = &segments[segments.len() - 1].name;
+            let help = if ctx.fn_names.contains(name) {
+                format!("`{name}` is declared in another module; call it bare as `{name}(…)`, or fix the module path")
+            } else {
+                format!("declare it with `fn {name}(…) -> … {{ … }}` in that module")
+            };
+            diags.push(
+                Diag::new(
+                    file,
+                    span,
+                    "E072",
+                    format!("call to undefined function `{path}`"),
+                    "no such function",
+                )
+                .with_help(help),
+            );
+        }
+        return;
+    }
     let [seg] = segments.as_slice() else {
         return;
     };
@@ -2552,8 +2640,8 @@ fn infer_field(base: &Expr, field: &str, ctx: &BodyCtx, locals: &HashMap<String,
 
 fn infer_call(callee: &Expr, ctx: &BodyCtx, locals: &HashMap<String, RTy>) -> RTy {
     if let Expr::Path { segments, .. } = callee {
-        if segments.len() == 1 {
-            if let Some(ret) = ctx.fn_returns.get(&segments[0].name) {
+        if segments.len() == 1 || ctx.resolves_qualified_fn(segments) {
+            if let Some(ret) = ctx.fn_returns.get(&segments[segments.len() - 1].name) {
                 return ret.clone();
             }
         }

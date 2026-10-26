@@ -847,7 +847,14 @@ fn lower_call(callee: &Expr, args: &[Expr], env: &mut Env, scope: &mut Scope) ->
         let arg_s = lower_args(args, env, scope);
         return format!("{base_s}.{method}({arg_s})");
     }
-    let callee_s = lower_expr(callee, env, scope);
+    // Helpers are emitted flat, so `accounts::double(x)` is just `double(x)`.
+    // The checker has already confirmed the qualifier names the declaring module.
+    let callee_s = match callee {
+        Expr::Path { segments, .. } if segments.len() > 1 => {
+            segments[segments.len() - 1].name.clone()
+        }
+        _ => lower_expr(callee, env, scope),
+    };
     let arg_s = lower_args(args, env, scope);
     format!("{callee_s}({arg_s})")
 }
@@ -1047,10 +1054,8 @@ fn infer_field(base: &Expr, field: &str, env: &mut Env, scope: &mut Scope) -> RT
 fn infer_call(callee: &Expr, env: &mut Env, scope: &mut Scope) -> RTy {
     // A call to a user-declared free function -> its declared return type.
     if let Expr::Path { segments, .. } = callee {
-        if segments.len() == 1 {
-            if let Some(ret) = env.fn_returns.get(&segments[0].name) {
-                return ret.clone();
-            }
+        if let Some(ret) = segments.last().and_then(|s| env.fn_returns.get(&s.name)) {
+            return ret.clone();
         }
         return RTy::Unknown;
     }
