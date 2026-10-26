@@ -77,18 +77,22 @@ jobs:
         id: cfg
         env:
           TAP_TOKEN: ${{ secrets.HOMEBREW_TAP_TOKEN }}
+          TAP_KEY: ${{ secrets.HOMEBREW_TAP_DEPLOY_KEY }}
         run: |
-          if [ -n "$TAP_TOKEN" ]; then
+          if [ -n "$TAP_TOKEN" ] || [ -n "$TAP_KEY" ]; then
             echo "enabled=true" >> "$GITHUB_OUTPUT"
           else
             echo "enabled=false" >> "$GITHUB_OUTPUT"
-            echo "::notice::HOMEBREW_TAP_TOKEN not set — skipping Homebrew bump. See packaging/homebrew/README.md."
+            echo "::notice::neither HOMEBREW_TAP_DEPLOY_KEY nor HOMEBREW_TAP_TOKEN set — skipping Homebrew bump. See packaging/homebrew/README.md."
           fi
 
       - name: Render and publish formula
         if: steps.cfg.outputs.enabled == 'true'
         env:
-          GH_TOKEN: ${{ secrets.HOMEBREW_TAP_TOKEN }}
+          # Release assets are public; this token only reads them.
+          GH_TOKEN: ${{ github.token }}
+          TAP_TOKEN: ${{ secrets.HOMEBREW_TAP_TOKEN }}
+          TAP_KEY: ${{ secrets.HOMEBREW_TAP_DEPLOY_KEY }}
           # Override these repository/org variables if your tap lives elsewhere.
           TAP_REPO: ${{ vars.HOMEBREW_TAP_REPO || 'nuthatch-org/homebrew-tap' }}
           OWNER_REPO: ${{ github.repository }}
@@ -120,7 +124,15 @@ jobs:
             packaging/homebrew/redstart.rb.tmpl > redstart.rb
 
           # Commit the rendered formula into the tap repo.
-          git clone "https://x-access-token:${GH_TOKEN}@github.com/${TAP_REPO}.git" tap
+          # A write deploy key on the tap is preferred: it can touch nothing else.
+          if [ -n "$TAP_KEY" ]; then
+            install -m 600 /dev/null "$RUNNER_TEMP/tap_key"
+            printf '%s\n' "$TAP_KEY" > "$RUNNER_TEMP/tap_key"
+            export GIT_SSH_COMMAND="ssh -i $RUNNER_TEMP/tap_key -o IdentitiesOnly=yes -o StrictHostKeyChecking=accept-new"
+            git clone "git@github.com:${TAP_REPO}.git" tap
+          else
+            git clone "https://x-access-token:${TAP_TOKEN}@github.com/${TAP_REPO}.git" tap
+          fi
           mkdir -p tap/Formula
           mv redstart.rb tap/Formula/redstart.rb
           cd tap

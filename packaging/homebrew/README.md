@@ -14,13 +14,19 @@ to the tap on every tagged release, so the tap stays in sync automatically.
    To point at a different tap, set a repo variable `HOMEBREW_TAP_REPO`
    (e.g. `your-org/homebrew-tap`).
 
-2. **Create a token with write access to the tap.** A fine-grained PAT scoped to
-   the tap repo with **Contents: read & write**, or a classic PAT with `repo`.
+2. **Give the release workflow write access to the tap**, scoped to the tap alone:
 
-3. **Add it as a secret** on *this* repo named `HOMEBREW_TAP_TOKEN`
-   (Settings → Secrets and variables → Actions → New repository secret).
+   ```sh
+   ssh-keygen -t ed25519 -N '' -C redstart-release -f tapkey
+   gh repo deploy-key add tapkey.pub -R nuthatch-org/homebrew-tap -t "redstart release" -w
+   gh secret set HOMEBREW_TAP_DEPLOY_KEY -R nuthatch-org/redstart < tapkey
+   rm tapkey tapkey.pub
+   ```
 
-That's it. The `bump-homebrew` job skips cleanly when the secret is absent, so
+   A PAT with write access to the tap, stored as `HOMEBREW_TAP_TOKEN`, also
+   works; the deploy key is preferred because it can reach nothing else.
+
+That's it. The `bump-homebrew` job skips cleanly when neither secret is set, so
 binary releases work before the tap is wired up.
 
 ## Cutting a release
