@@ -32,7 +32,8 @@ sources = ["**/*.rs", "**/Cargo.toml", "Cargo.lock"]
 [tasks.test]
 desc = "Run the test suite (CI: test)"
 run = ["cargo test --workspace"]
-sources = ["**/*.rs", "**/Cargo.toml", "Cargo.lock"]
+# The codegen snapshot tests read examples/ and the insta .snap files.
+sources = ["**/*.rs", "**/Cargo.toml", "Cargo.lock", "crates/**", "examples/**"]
 watch = ["**/*.rs"]
 
 [tasks.build]
