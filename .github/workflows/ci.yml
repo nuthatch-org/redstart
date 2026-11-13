@@ -18,7 +18,7 @@ env:
 
   # The commands CI runs live in yatr.toml, so `yatr ci` locally is the
   # same gate. Bump deliberately.
-  YATR_VERSION: "1.1.1"
+  YATR_VERSION: "1.2.0"
 jobs:
   # fmt + clippy + the Rust test suite.
   check:
