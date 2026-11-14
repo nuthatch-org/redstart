@@ -41,7 +41,7 @@ jobs:
         # RUSTFLAGS is cleared deliberately: yatr is a different crate and must
         # not inherit this project's flags (a `-D warnings` or a custom linker
         # would fail or mislink the install).
-        run: cargo install yatr --version ${{ env.YATR_VERSION }} --locked
+        run: cargo install yatr --version ${{ env.YATR_VERSION }} --locked --force
         env:
           RUSTFLAGS: ""
 
