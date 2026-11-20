@@ -22,13 +22,13 @@ const ABIS = JSON.stringify({
   ],
 });
 
-const DEFAULT_SOURCE = `// Edit me — the panels regenerate as you type.
+const DEFAULT_SOURCE = `// Edit me. The panels regenerate as you type.
 abi ERC20 from "./abis/ERC20.json"
 
 entity Account {
   id: Id<Bytes>
   balance: BigInt
-  label: Option<String>          // nullable — there is no \`null\`
+  label: Option<String>          // nullable: there is no \`null\`
 }
 
 entity Transfer immutable {

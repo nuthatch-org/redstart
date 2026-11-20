@@ -3,7 +3,7 @@ import type { NextRequest } from "next/server";
 // GitHub OAuth callback (popup flow). Exchanges the code for a user token using
 // the server-side client secret, then returns a tiny HTML page that hands the
 // token back to the opener window via postMessage and closes. The token is never
-// stored — the opener uses it immediately to create the repo, client-side.
+// stored: the opener uses it immediately to create the repo, client-side.
 
 export const dynamic = "force-dynamic";
 

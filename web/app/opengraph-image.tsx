@@ -2,7 +2,7 @@ import { ImageResponse } from "next/og";
 import { readFile } from "node:fs/promises";
 import { join } from "node:path";
 
-export const alt = "Redstart — one language for The Graph subgraphs";
+export const alt = "Redstart: one typed language for The Graph subgraphs";
 export const size = { width: 1200, height: 630 };
 export const contentType = "image/png";
 
@@ -76,7 +76,7 @@ export default async function Image() {
             fontSize: 23,
           }}
         >
-          <span style={{ color: MUTED }}>The most performant &amp; secure language for The Graph subgraphs</span>
+          <span style={{ color: MUTED }}>One typed language for The Graph subgraphs</span>
           <span style={{ color: TEXT }}>redstart-lang.com</span>
         </div>
       </div>

@@ -12,7 +12,7 @@ const eslintConfig = defineConfig([
     "out/**",
     "build/**",
     "next-env.d.ts",
-    // Generated wasm-pack bindings — not our source, don't lint.
+    // Generated wasm-pack bindings: not our source, don't lint.
     "public/wasm/**",
   ]),
 ]);

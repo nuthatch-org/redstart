@@ -126,7 +126,7 @@
     color: var(--color-text);
   }
 
-  /* Syntax tokens — tuned for the dark surface */
+  /* Syntax tokens, tuned for the dark surface */
   .tok-comment {
     color: var(--color-faint);
     font-style: italic;

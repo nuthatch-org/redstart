@@ -2,7 +2,7 @@
 // API key via the `chainid` query param, so one proxy covers every network.
 //
 // `graphNetwork` is the name that goes into `subgraph.yaml` (`dataSources[].network`),
-// which differs from the human label and the chain id — e.g. Polygon is `matic`.
+// which differs from the human label and the chain id, e.g. Polygon is `matic`.
 
 export interface Chain {
   id: number;

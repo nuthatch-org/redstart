@@ -1,5 +1,5 @@
 // Real, honest samples used across the landing page. The AssemblyScript is the
-// independently hand-written conformance reference — not a strawman.
+// independently hand-written conformance reference, not a strawman.
 
 export const REDSTART_ERC20 = `abi ERC20 from "./abis/ERC20.json"
 
@@ -29,7 +29,7 @@ handler on Token.Transfer(event) {
 
   sender.balance = sender.balance - event.params.value
   receiver.balance = receiver.balance + event.params.value
-  // dirty-tracked, auto-saved — forgetting .save() can't happen
+  // dirty-tracked, auto-saved: forgetting .save() can't happen
 
   Transfer.create(event.id, {
     from: event.params.from,

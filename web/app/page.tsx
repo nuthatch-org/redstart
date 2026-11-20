@@ -19,7 +19,7 @@ const FOOTGUNS = [
   },
   {
     t: "Arithmetic on null",
-    d: "There is no null — only Option<T>. Maths on a maybe-absent value is a compile error, not a silent miscompile.",
+    d: "There is no null, only Option<T>. Maths on a maybe-absent value is a compile error, not a silent miscompile.",
   },
   {
     t: "Reverted calls aborting",
@@ -39,11 +39,11 @@ const FOOTGUNS = [
   },
   {
     t: "Non-determinism",
-    d: "Date.now() and Math.random() are a compile error — they diverge Proof-of-Indexing across indexers and get them slashed.",
+    d: "Date.now() and Math.random() are compile errors. They diverge Proof-of-Indexing across indexers and get them slashed.",
   },
   {
     t: "eth_call in a loop",
-    d: "A contract call inside a loop — the documented 'stuck at 3%' sync killer — is flagged before you deploy it.",
+    d: "A contract call inside a loop, the documented 'stuck at 3%' sync killer, is flagged before you deploy it.",
   },
 ];
 
@@ -56,7 +56,7 @@ export default function Home() {
           <Reveal>
             <span className="tag">
               <Bird className="h-3.5 w-3.5" />
-              the sexiest language for authoring The Graph subgraphs
+              one typed language for The Graph subgraphs
             </span>
           </Reveal>
           <Reveal i={1}>
@@ -68,11 +68,10 @@ export default function Home() {
           </Reveal>
           <Reveal i={2}>
             <p className="mt-6 max-w-xl text-lg leading-relaxed text-muted">
-              The most performant and secure language for authoring The Graph
-              subgraphs. One typed source for schema, manifest, and mappings —
-              compiled to AssemblyScript that&apos;s faster and safer than any
-              human would hand-write. <span className="text-text">If it compiles,
-              it works.</span>
+              One typed source for schema, manifest and mappings, compiled to
+              readable AssemblyScript that{" "}
+              <code className="font-mono text-text">graph build</code> compiles
+              unmodified. <span className="text-text">If it compiles, it works.</span>
             </p>
           </Reveal>
           <Reveal i={3}>
@@ -95,13 +94,13 @@ export default function Home() {
         </div>
       </section>
 
-      {/* ---- Would you rather maintain this — or this? ---- */}
+      {/* ---- Would you rather maintain this, or this? ---- */}
       <section className="border-b border-line">
         <div className="mx-auto max-w-6xl px-5 py-16 sm:py-24">
           <Reveal>
             <p className="eyebrow">The pitch</p>
             <h2 className="display mt-3 max-w-2xl text-4xl sm:text-5xl">
-              Would you rather write &amp; maintain this —
+              Would you rather write and maintain this
             </h2>
           </Reveal>
 
@@ -142,9 +141,9 @@ export default function Home() {
               Both produce the same store. Only one of them can&apos;t drift,
               can&apos;t forget a{" "}
               <code className="font-mono text-text">.save()</code>, and
-              can&apos;t let a renamed event compile. The AssemblyScript on the
-              right is the genuine hand-written reference from our conformance
-              suite — not a strawman.
+              can&apos;t let a renamed event compile. The AssemblyScript is the
+              genuine hand-written reference from our conformance suite, not a
+              strawman.
             </p>
           </Reveal>
         </div>
@@ -190,7 +189,7 @@ export default function Home() {
             </h2>
             <p className="mt-5 max-w-lg leading-relaxed text-muted">
               <code className="font-mono text-text">redstart build</code> emits
-              the exact files a hand-written subgraph has — readable, idiomatic
+              the exact files a hand-written subgraph has: readable, idiomatic
               AssemblyScript and GraphQL that{" "}
               <code className="font-mono text-text">graph build</code> compiles
               unmodified. Walk away whenever you like; you keep the generated

@@ -13,10 +13,10 @@ import { connectGitHub, type CreatedRepo, createSubgraphRepo } from "@/lib/githu
 import { highlight } from "@/lib/highlight";
 import { downloadProject, projectFiles, type VerifyResult, verifyProject } from "@/lib/project";
 
-// GitHub OAuth client id (public). Inlined at build time — a NEXT_PUBLIC change
+// GitHub OAuth client id (public). Inlined at build time: a NEXT_PUBLIC change
 // requires a fresh compile of this module (touch the source to bust the cache).
 const GITHUB_CLIENT_ID = process.env.NEXT_PUBLIC_GITHUB_CLIENT_ID;
-// Public MCP endpoint — the "use your Claude plan" power path.
+// Public MCP endpoint: the "use your Claude plan" power path.
 const MCP_URL = "https://mcp.89.167.109.4.sslip.io/mcp";
 import type { ContractInfo, EventDef } from "@/lib/subgraph-abi";
 
@@ -38,7 +38,7 @@ export function Generator() {
   const [contract, setContract] = useState<ContractInfo | null>(null);
   const [selected, setSelected] = useState<Set<string>>(new Set());
 
-  // BYOK: the Anthropic key lives only in sessionStorage — never sent to us.
+  // BYOK: the Anthropic key lives only in sessionStorage and is never sent to us.
   const [apiKey, setApiKey] = useState("");
   const [generating, setGenerating] = useState(false);
   const [genError, setGenError] = useState<string | null>(null);
@@ -80,7 +80,7 @@ export function Generator() {
         JSON.stringify({ address, chainId, contract, selected: [...selected], generated }),
       );
     } catch {
-      /* quota / serialization — non-fatal */
+      /* quota / serialization: non-fatal */
     }
   }, [hydrated, address, chainId, contract, selected, generated]);
 
@@ -160,7 +160,7 @@ export function Generator() {
         </h1>
         <p className="mt-3 max-w-xl text-muted">
           Point it at any verified contract. It researches the ABI, proxies and start
-          block, then generates best-practices AssemblyScript — verified before you
+          block, then generates best-practices AssemblyScript, verified before you
           ever see it. Your AI, your repo, your keys.
         </p>
       </header>
@@ -299,7 +299,7 @@ function ContractPanel({
         </div>
         {contract.events.length === 0 ? (
           <p className="text-sm text-muted">
-            This ABI declares no events. Event handlers are the fast, portable path — a
+            This ABI declares no events. Event handlers are the fast, portable path. A
             contract with no events needs call/block handlers, which is a later feature.
           </p>
         ) : (
@@ -343,8 +343,8 @@ function ContractPanel({
           </button>
         </div>
         <p className="mt-2 text-xs text-muted">
-          Your key calls Claude (<span className="text-text">Opus 4.8</span>, the most capable
-          model — best for tricky AssemblyScript) directly from this page. Generation runs on your
+          Your key calls Claude (<span className="text-text">Opus 4.8</span>) directly from this
+          page. Generation runs on your
           account and typically costs <span className="text-text">under $0.50 per subgraph</span>.
           Get a key at{" "}
           <a
@@ -367,10 +367,10 @@ function ContractPanel({
               Connect The Generator&apos;s <span className="text-text">MCP server</span> to{" "}
               <span className="text-text">Claude Code</span> or{" "}
               <span className="text-text">Claude Desktop</span> and generate from inside your
-              own Claude — the inference runs on <span className="text-text">your Max/Pro plan</span>,
-              no API key, no per-token cost.
+              own Claude. The inference runs on <span className="text-text">your Max/Pro plan</span>,
+              with no API key and no per-token cost.
             </p>
-            <p className="text-faint">Claude Code — one command:</p>
+            <p className="text-muted">Claude Code, one command:</p>
             <div className="flex items-center gap-2">
               <code className="flex-1 overflow-x-auto rounded-md border border-line-2 bg-elev px-2.5 py-2 font-mono text-[0.7rem] text-text">
                 claude mcp add --transport http redstart {MCP_URL}
@@ -380,7 +380,7 @@ function ContractPanel({
             <p>
               Then ask Claude:{" "}
               <span className="text-muted">
-                &ldquo;use the redstart tools to build a subgraph for &lt;address&gt; — fetch the
+                &ldquo;use the redstart tools to build a subgraph for &lt;address&gt;: fetch the
                 contract, read the best-practices resource, then compile_subgraph until it&apos;s
                 green.&rdquo;
               </span>{" "}
@@ -465,7 +465,7 @@ function FilesPanel({
     let log = verdict?.log ?? verdict?.error ?? "";
     try {
       for (let i = 1; i <= MAX_FIX; i++) {
-        setFixStatus(`Fixing with Claude — attempt ${i} of ${MAX_FIX}…`);
+        setFixStatus(`Fixing with Claude, attempt ${i} of ${MAX_FIX}…`);
         const next = await fixSubgraph(apiKey, contract, cur, log);
         onFilesUpdate(next);
         cur = next;
@@ -480,7 +480,7 @@ function FilesPanel({
         }
         log = res.log ?? res.error ?? "";
         if (i === MAX_FIX) {
-          setFixStatus(`Still failing after ${MAX_FIX} attempts — you can try again or tweak the files.`);
+          setFixStatus(`Still failing after ${MAX_FIX} attempts. You can try again or tweak the files.`);
         }
       }
     } catch (e) {
@@ -497,7 +497,7 @@ function FilesPanel({
     setGhBusy(true);
     setGhPhase("connect");
     try {
-      // A popup opens on GitHub — the user signs in (if needed) and clicks Authorize.
+      // A popup opens on GitHub; the user signs in (if needed) and clicks Authorize.
       // The button says "Waiting for GitHub…" so this isn't mistaken for a hang.
       const token = await connectGitHub(GITHUB_CLIENT_ID);
       setGhPhase("push");
@@ -505,16 +505,16 @@ function FilesPanel({
         token,
         repoName.trim(),
         projectFiles(files, contract),
-        `${contract.name} subgraph — generated by The Generator (redstart-lang.com)`,
+        `${contract.name} subgraph, generated by The Generator (redstart-lang.com)`,
       );
       setGhRepo(repo);
     } catch (e) {
       const msg = (e as Error).message;
       // The popup-closed case almost always means the sign-in/Authorize wasn't
-      // finished — say so, rather than the bare "Window closed".
+      // finished, so say so rather than the bare "Window closed".
       setGhError(
         /window closed/i.test(msg)
-          ? "Authorization cancelled — in the GitHub popup, sign in and click Authorize (grant repository access), then try again."
+          ? "Authorization cancelled. In the GitHub popup, sign in and click Authorize (grant repository access), then try again."
           : msg,
       );
     } finally {
@@ -598,7 +598,7 @@ function FilesPanel({
         {ghRepo ? (
           <div className="flex flex-wrap items-center justify-between gap-2">
             <span className="text-sm text-ok">
-              ✓ Repo created —{" "}
+              ✓ Repo created:{" "}
               <a
                 href={ghRepo.url}
                 target="_blank"
@@ -609,7 +609,7 @@ function FilesPanel({
               </a>
               {ghRepo.workflowSkipped && (
                 <span className="ml-2 text-xs text-muted">
-                  (CI workflow skipped — it&apos;s in the .zip; reconnect and approve
+                  (CI workflow skipped. It&apos;s in the .zip; reconnect and approve
                   &ldquo;workflow&rdquo; to include it)
                 </span>
               )}
@@ -624,7 +624,7 @@ function FilesPanel({
         ) : (
           <div className="flex flex-wrap items-center justify-between gap-2">
             <span className="text-xs text-muted">
-              A complete project — schema, manifest, mappings, tests, CI. Ejects to the
+              A complete project: schema, manifest, mappings, tests, CI. Ejects to the
               canonical toolchain unchanged.
             </span>
             <div className="flex items-center gap-2">
@@ -661,7 +661,7 @@ function FilesPanel({
         )}
         {ghPhase === "connect" && (
           <p className="mt-2 text-xs text-muted">
-            A GitHub popup opened — sign in if needed and click <strong>Authorize</strong> (grant
+            A GitHub popup opened. Sign in if needed and click <strong>Authorize</strong> (grant
             repository access). Keep it open until it closes itself.
           </p>
         )}
@@ -699,7 +699,7 @@ function GeneratingPanel() {
           <div>
             <p className="text-sm text-text">Generating with Claude Opus 4.8…</p>
             <p className="text-xs text-faint">
-              Writing best-practices AssemblyScript — usually 20–60s.
+              Writing best-practices AssemblyScript, usually in 20–60s.
             </p>
           </div>
         </div>
@@ -748,7 +748,7 @@ function VerifyBanner({
         </div>
         <div className="flex items-center gap-2.5 bg-inset px-4 py-2.5 text-sm text-muted">
           <span className="h-3.5 w-3.5 shrink-0 motion-safe:animate-spin rounded-full border-2 border-accent/25 border-t-accent" />
-          Compiling on the real Graph toolchain — running codegen, build &amp; test…
+          Compiling on the real Graph toolchain: running codegen, build &amp; test…
         </div>
       </div>
     );
@@ -758,7 +758,7 @@ function VerifyBanner({
   if (verdict.ok) {
     return (
       <div className="border-b border-ok/25 bg-ok/10 px-4 py-2.5 text-sm text-ok">
-        ✓ Verified — <span className="text-text">graph codegen, build &amp; Matchstick tests all passed.</span>
+        ✓ Verified: <span className="text-text">graph codegen, build &amp; Matchstick tests all passed.</span>
       </div>
     );
   }

@@ -1,7 +1,7 @@
 // Generator regression harness.
 //
 // For each corpus contract: hit the deployed /api/contract, run the REAL
-// generation (imports lib/generate.ts — the exact prompt users get), then run
+// generation (imports lib/generate.ts, the exact prompt users get), then run
 // genuine `graph codegen && graph build && graph test` against it. Records a
 // scorecard and a frozen results file, so "≥80% first-try green" becomes a number
 // and regressions are caught as the prompt evolves.
@@ -126,7 +126,7 @@ async function verifyOne(e: CorpusEntry): Promise<Result> {
 
 async function main() {
   if (!KEY) {
-    console.error("Set ANTHROPIC_API_KEY (a test-only key — the harness has no human to BYOK).");
+    console.error("Set ANTHROPIC_API_KEY (a test-only key: the harness has no human to BYOK).");
     process.exit(1);
   }
   if (!existsSync(join(BASE, "node_modules"))) {

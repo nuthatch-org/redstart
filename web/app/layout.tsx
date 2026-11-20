@@ -18,9 +18,9 @@ const mono = localFont({
 });
 
 const SITE = "https://redstart-lang.com";
-const TAGLINE = "Redstart — the best language for building The Graph subgraphs";
+const TAGLINE = "Redstart: one typed language for The Graph subgraphs";
 const DESCRIPTION =
-  "The most performant and secure language for authoring The Graph subgraphs. One typed source for schema, manifest, and mappings — compiled to AssemblyScript that's faster and safer than any human would hand-write. If it compiles, it works.";
+  "One typed source for schema, manifest and mappings, compiled to readable AssemblyScript that graph build compiles unmodified. Store-diffed against a hand-written reference on a live graph-node: 0 differences. If it compiles, it works.";
 
 export const metadata: Metadata = {
   metadataBase: new URL(SITE),

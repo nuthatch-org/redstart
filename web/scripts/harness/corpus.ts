@@ -1,5 +1,5 @@
 // The graded test corpus. Each entry stresses a specific stage of the pipeline.
-// Expectations are the TARGET — the harness reports actual vs. target and a
+// Expectations are the TARGET: the harness reports actual vs. target and a
 // first-try-green percentage. Verify addresses on Etherscan before trusting them.
 
 export interface CorpusEntry {
@@ -67,7 +67,7 @@ export const CORPUS: CorpusEntry[] = [
     address: "0x00000000000000ADc04C56Bf30aC9d3c0aAF14dC",
     chainId: 1,
     tier: 3,
-    stresses: "Deeply nested tuple-array events (OrderFulfilled) — the AS codegen killer",
+    stresses: "Deeply nested tuple-array events (OrderFulfilled), the AS codegen killer",
     expect: { researched: true, compiles: true, testsPass: true },
   },
   {
@@ -75,16 +75,16 @@ export const CORPUS: CorpusEntry[] = [
     address: "0xb47e3cd837dDF8e4c57F05d70Ab865de6e193BBB",
     chainId: 1,
     tier: 3,
-    stresses: "Pre-ERC-721 — NFT heuristic should NOT fire; generic fallback",
+    stresses: "Pre-ERC-721: NFT heuristic should NOT fire; generic fallback",
     expect: { researched: true, compiles: true, testsPass: true },
   },
-  // ── Tier 4: factories (observe — factory templates not built yet) ──
+  // ── Tier 4: factories (observe: factory templates not built yet) ──
   {
     name: "UniswapV2Factory",
     address: "0x5C69bEe701ef814a2B6a3EDD4B1652CB9cc8aA6f",
     chainId: 1,
     tier: 4,
-    stresses: "Factory (PairCreated) — today produces a FLAT subgraph (no child templates)",
+    stresses: "Factory (PairCreated): today produces a FLAT subgraph (no child templates)",
     expect: { researched: true, compiles: true, testsPass: true },
   },
 ];

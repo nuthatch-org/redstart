@@ -8,7 +8,7 @@ import {
 } from "@/lib/subgraph-abi";
 
 // Stateless proxy for the contract-research pipeline. It only ever talks to
-// Etherscan with Pete's key — it never sees the user's AI key (all AI calls are
+// Etherscan with Pete's key; it never sees the user's AI key (all AI calls are
 // client-side). Verified-contract endpoints (source/ABI/creation) are free on
 // every chain via the V2 single-key API.
 
@@ -156,7 +156,7 @@ export async function GET(request: NextRequest) {
     return Response.json(
       {
         error:
-          "This contract isn't verified on Etherscan. ABI recovery from bytecode is coming soon — for now, try a verified contract.",
+          "This contract isn't verified on Etherscan. ABI recovery from bytecode is coming soon. For now, try a verified contract.",
         verified: false,
       },
       { status: 422 },
