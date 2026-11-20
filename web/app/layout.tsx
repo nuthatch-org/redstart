@@ -1,17 +1,21 @@
 import type { Metadata } from "next";
-import { Space_Grotesk } from "next/font/google";
-import { GeistSans } from "geist/font/sans";
-import { GeistMono } from "geist/font/mono";
+import localFont from "next/font/local";
 import "./globals.css";
 import { Nav } from "@/components/nav";
 import { Footer } from "@/components/footer";
 import { Cosmos } from "@/components/cosmos";
 import { VersionWatcher } from "@/components/version-watcher";
 
-const display = Space_Grotesk({
-  variable: "--font-display",
-  subsets: ["latin"],
-  weight: ["500", "600", "700"],
+const sans = localFont({
+  src: "./fonts/space-grotesk.woff2",
+  variable: "--font-space-grotesk",
+  weight: "300 700",
+});
+
+const mono = localFont({
+  src: "./fonts/jetbrains-mono.woff2",
+  variable: "--font-jetbrains-mono",
+  weight: "400",
 });
 
 const SITE = "https://redstart-lang.com";
@@ -46,7 +50,7 @@ export default function RootLayout({
   return (
     <html
       lang="en"
-      className={`${GeistSans.variable} ${GeistMono.variable} ${display.variable} h-full antialiased`}
+      className={`${sans.variable} ${mono.variable} h-full antialiased`}
     >
       <body className="relative flex min-h-full flex-col bg-bg text-text">
         <Cosmos />

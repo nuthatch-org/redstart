@@ -19,9 +19,9 @@
   --color-ember: #ff7a45;
   --color-red-deep: #a60f33;
 
-  --font-display: var(--font-display), "Geist Sans", sans-serif;
-  --font-sans: var(--font-geist-sans), "Helvetica Neue", sans-serif;
-  --font-mono: var(--font-geist-mono), "SF Mono", monospace;
+  --font-display: var(--font-space-grotesk), ui-sans-serif, system-ui, sans-serif;
+  --font-sans: var(--font-space-grotesk), ui-sans-serif, system-ui, sans-serif;
+  --font-mono: var(--font-jetbrains-mono), ui-monospace, "SF Mono", Menlo, monospace;
 
   --ease-out: cubic-bezier(0.16, 1, 0.3, 1);
 }

@@ -31,7 +31,7 @@ export default async function Image() {
   const [display, displayBold, mono] = await Promise.all([
     readFile(join(process.cwd(), "assets/SpaceGrotesk-Medium.woff")),
     readFile(join(process.cwd(), "assets/SpaceGrotesk-Bold.woff")),
-    readFile(join(process.cwd(), "assets/GeistMono-Medium.ttf")),
+    readFile(join(process.cwd(), "assets/JetBrainsMono-Regular.ttf")),
   ]);
 
   return new ImageResponse(
@@ -56,7 +56,7 @@ export default async function Image() {
         {/* wordmark */}
         <div style={{ display: "flex", alignItems: "center", gap: 16 }}>
           <Bird s={36} color={RED} />
-          <span style={{ fontFamily: "Geist Mono", fontSize: 28, letterSpacing: "0.01em", color: TEXT }}>Redstart</span>
+          <span style={{ fontFamily: "JetBrains Mono", fontSize: 28, letterSpacing: "0.01em", color: TEXT }}>Redstart</span>
         </div>
 
         {/* tagline */}
@@ -77,7 +77,7 @@ export default async function Image() {
             justifyContent: "space-between",
             borderTop: "1px solid rgba(255,255,255,0.1)",
             paddingTop: 28,
-            fontFamily: "Geist Mono",
+            fontFamily: "JetBrains Mono",
             fontSize: 23,
           }}
         >
@@ -91,7 +91,7 @@ export default async function Image() {
       fonts: [
         { name: "Space Grotesk", data: display, style: "normal", weight: 500 },
         { name: "Space Grotesk", data: displayBold, style: "normal", weight: 700 },
-        { name: "Geist Mono", data: mono, style: "normal", weight: 500 },
+        { name: "JetBrains Mono", data: mono, style: "normal", weight: 400 },
       ],
     },
   );
