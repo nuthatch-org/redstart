@@ -175,7 +175,7 @@ export default function Home() {
                 <span className="inline-flex items-center gap-2 text-sm font-medium">
                   <Bird className="h-4 w-4 text-accent" /> Redstart
                 </span>
-                <span className="font-mono text-xs text-faint">
+                <span className="font-mono text-xs text-muted">
                   1 file · drift impossible
                 </span>
               </div>
@@ -187,7 +187,7 @@ export default function Home() {
                 <span className="text-sm font-medium text-muted">
                   …or these three, kept in sync by hand?
                 </span>
-                <span className="font-mono text-xs text-faint">
+                <span className="font-mono text-xs text-muted">
                   3 files · names must agree
                 </span>
               </div>
@@ -267,7 +267,7 @@ export default function Home() {
               <div className="flex items-center gap-2 text-text">
                 <Bird className="h-4 w-4 text-accent" /> token.red
               </div>
-              <div className="my-4 ml-1.5 border-l border-line pl-5 text-faint">
+              <div className="my-4 ml-1.5 border-l border-line pl-5 text-muted">
                 <div className="relative">
                   <span className="absolute -left-[1.42rem] text-accent">↓</span>
                   redstart build
@@ -284,7 +284,7 @@ export default function Home() {
                   src/mappings.ts
                 </div>
               </div>
-              <div className="my-4 ml-1.5 border-l border-line pl-5 text-faint">
+              <div className="my-4 ml-1.5 border-l border-line pl-5 text-muted">
                 <div className="relative">
                   <span className="absolute -left-[1.42rem] text-accent">↓</span>
                   graph codegen · graph build

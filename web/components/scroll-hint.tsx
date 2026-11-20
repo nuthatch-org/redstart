@@ -21,5 +21,5 @@ export function useOverflowsX<T extends HTMLElement>() {
 }
 
 export function ScrollHint() {
-  return <span className="ml-auto shrink-0 font-mono text-xs text-faint">scroll →</span>;
+  return <span className="ml-auto shrink-0 font-mono text-xs text-muted">scroll →</span>;
 }

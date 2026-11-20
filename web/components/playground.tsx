@@ -233,7 +233,7 @@ export function Playground() {
 
 function PaneHead({ label, children }: { label: string; children?: React.ReactNode }) {
   return (
-    <div className="flex items-center justify-between border-b border-line px-4 py-2 font-mono text-xs text-faint">
+    <div className="flex items-center justify-between border-b border-line px-4 py-2 font-mono text-xs text-muted">
       <span>{label}</span>
       {children}
     </div>
@@ -266,7 +266,7 @@ function TabButton({
     <button
       onClick={onClick}
       className={`shrink-0 rounded-md px-3 py-1 font-mono text-xs transition-colors ${
-        active ? "bg-inset text-text" : danger ? "text-bad" : "text-faint hover:text-muted"
+        active ? "bg-inset text-text" : danger ? "text-bad" : "text-muted hover:text-muted"
       }`}
     >
       {children}

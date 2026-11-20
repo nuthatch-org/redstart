@@ -167,7 +167,7 @@ export function Generator() {
 
       {/* Input row */}
       <div className="card p-4">
-        <label className="mb-1.5 block font-mono text-xs text-faint">CONTRACT ADDRESS</label>
+        <label className="mb-1.5 block font-mono text-xs text-muted">CONTRACT ADDRESS</label>
         <div className="flex flex-col gap-2 sm:flex-row">
           <input
             value={address}
@@ -208,7 +208,7 @@ export function Generator() {
         <div className="mt-3 text-right">
           <button
             onClick={startOver}
-            className="font-mono text-xs text-faint transition-colors hover:text-accent"
+            className="font-mono text-xs text-muted transition-colors hover:text-accent"
           >
             start over ✕
           </button>
@@ -293,7 +293,7 @@ function ContractPanel({
       <div className="card p-4">
         <div className="mb-3 flex items-center justify-between">
           <h2 className="text-sm font-medium">Events to index</h2>
-          <span className="font-mono text-xs text-faint">
+          <span className="font-mono text-xs text-muted">
             {selected.size}/{contract.events.length} selected
           </span>
         </div>
@@ -319,8 +319,8 @@ function ContractPanel({
       {/* Connect AI + generate */}
       <div className="card p-4">
         <div className="mb-1.5 flex items-center justify-between">
-          <label className="font-mono text-xs text-faint">ANTHROPIC API KEY</label>
-          <span className="font-mono text-[0.68rem] text-faint">
+          <label className="font-mono text-xs text-muted">ANTHROPIC API KEY</label>
+          <span className="font-mono text-[0.68rem] text-muted">
             stored in your browser only · never sent to us
           </span>
         </div>
@@ -387,7 +387,7 @@ function ContractPanel({
               Your Claude does the work; the server gives it contract research and the real compile
               gate.
             </p>
-            <p className="text-faint">
+            <p className="text-muted">
               Works best in Claude Code / Desktop. claude.ai web can be flaky at surfacing custom
               connectors.
             </p>
@@ -581,7 +581,7 @@ function FilesPanel({
               key={t.key}
               onClick={() => setTab(t.key)}
               className={`px-3 py-2.5 font-mono text-xs transition-colors ${
-                tab === t.key ? "text-accent" : "text-faint hover:text-muted"
+                tab === t.key ? "text-accent" : "text-muted hover:text-muted"
               }`}
             >
               {t.label}
@@ -698,7 +698,7 @@ function GeneratingPanel() {
           <span className="h-4 w-4 shrink-0 motion-safe:animate-spin rounded-full border-2 border-accent/25 border-t-accent" />
           <div>
             <p className="text-sm text-text">Generating with Claude Opus 4.8…</p>
-            <p className="text-xs text-faint">
+            <p className="text-xs text-muted">
               Writing best-practices AssemblyScript, usually in 20–60s.
             </p>
           </div>
@@ -718,7 +718,7 @@ function GeneratingPanel() {
                   <span className="h-2 w-2 rounded-full border border-line-2" />
                 )}
               </span>
-              <span className={i <= step ? "text-muted" : "text-faint"}>{s}</span>
+              <span className={i <= step ? "text-text" : "text-muted"}>{s}</span>
             </li>
           ))}
         </ul>
@@ -796,7 +796,7 @@ function CopyButton({ text }: { text: string }) {
         setCopied(true);
         setTimeout(() => setCopied(false), 1200);
       }}
-      className="mr-1 rounded-md px-2 py-1 font-mono text-xs text-faint transition-colors hover:bg-inset hover:text-text"
+      className="mr-1 rounded-md px-2 py-1 font-mono text-xs text-muted transition-colors hover:bg-inset hover:text-text"
     >
       {copied ? "copied" : "copy"}
     </button>
@@ -822,7 +822,7 @@ function EventRow({
           className="h-4 w-4 accent-accent"
         />
         <span className="font-mono text-sm text-text">{event.name}</span>
-        <span className="truncate font-mono text-xs text-faint">
+        <span className="truncate font-mono text-xs text-muted">
           ({event.inputs.map((i) => `${i.type} ${i.name}`).join(", ")})
         </span>
       </label>
@@ -833,7 +833,7 @@ function EventRow({
 function Row({ label, value }: { label: string; value: React.ReactNode }) {
   return (
     <div className="flex gap-2">
-      <dt className="text-faint">{label}</dt>
+      <dt className="text-muted">{label}</dt>
       <dd className="truncate text-muted">{value}</dd>
     </div>
   );

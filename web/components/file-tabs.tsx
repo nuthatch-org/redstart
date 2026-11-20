@@ -28,7 +28,7 @@ export function FileTabs({
             className={`shrink-0 rounded-md px-3 py-1 font-mono text-xs transition-colors ${
               i === active
                 ? "bg-inset text-text"
-                : "text-faint hover:text-muted"
+                : "text-muted hover:text-muted"
             }`}
           >
             {f.name}
