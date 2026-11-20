@@ -42,6 +42,10 @@ const FOOTGUNS = [
     d: "Date.now() and Math.random() are compile errors. They diverge Proof-of-Indexing across indexers and get them slashed.",
   },
   {
+    t: "Division by zero",
+    d: "A statically zero denominator is a compile error. graph-node would halt the sync on it, deterministically, every time.",
+  },
+  {
     t: "eth_call in a loop",
     d: "A contract call inside a loop, the documented 'stuck at 3%' sync killer, is flagged before you deploy it.",
   },
@@ -105,7 +109,7 @@ export default function Home() {
           </Reveal>
 
           <div className="mt-12 grid items-start gap-6 lg:grid-cols-2">
-            <Reveal i={1} className="flex flex-col gap-3">
+            <Reveal i={1} className="flex min-w-0 flex-col gap-3">
               <div className="flex items-center justify-between">
                 <span className="inline-flex items-center gap-2 text-sm font-medium">
                   <Bird className="h-4 w-4 text-accent" /> Redstart
@@ -117,7 +121,7 @@ export default function Home() {
               <CodeBlock code={REDSTART_ERC20} lang="red" filename="token.red" />
             </Reveal>
 
-            <Reveal i={2} className="flex flex-col gap-3">
+            <Reveal i={2} className="flex min-w-0 flex-col gap-3">
               <div className="flex items-center justify-between">
                 <span className="text-sm font-medium text-muted">
                   …or these three, kept in sync by hand?
@@ -164,7 +168,7 @@ export default function Home() {
                 key={f.t}
                 i={i % 3}
                 as="article"
-                className="group bg-elev p-7 transition-colors hover:bg-inset"
+                className="bg-elev p-7 sm:last:col-span-2 lg:last:col-span-1"
               >
                 <div className="flex items-center gap-2 text-sm font-medium">
                   <span className="font-mono text-accent">✕</span>

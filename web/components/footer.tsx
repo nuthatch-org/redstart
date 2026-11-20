@@ -43,10 +43,10 @@ export function Footer() {
         </div>
       </div>
       <div className="border-t border-line">
-        <div className="mx-auto flex max-w-6xl items-center justify-between px-5 py-4 text-xs text-faint">
+        <div className="mx-auto flex max-w-6xl flex-col gap-1 px-5 py-4 text-xs text-muted sm:flex-row sm:items-center sm:justify-between">
           <span>MIT licensed · The Lodestar Team</span>
           <span className="font-mono">
-            redstart-lang.com <span className="text-faint/60">· build {BUILD}</span>
+            redstart-lang.com <span className="text-faint">· build {BUILD}</span>
           </span>
         </div>
       </div>
