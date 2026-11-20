@@ -43,7 +43,7 @@ export function VersionWatcher() {
   if (!stale) return null;
 
   return (
-    <div className="fixed inset-x-0 bottom-0 z-50 flex items-center justify-center gap-3 border-t border-red/40 bg-red/10 px-4 py-2.5 backdrop-blur">
+    <div className="fixed inset-x-0 bottom-0 z-50 flex items-center justify-center gap-3 border-t border-accent/40 bg-accent/10 px-4 py-2.5 backdrop-blur">
       <span className="text-sm text-text">
         A new version of The Generator is available.
       </span>

@@ -193,7 +193,7 @@ export function Playground() {
             autoCapitalize="off"
             autoCorrect="off"
             wrap="off"
-            className={`absolute inset-0 resize-none overflow-auto border-0 bg-transparent text-transparent caret-[#ff5e76] outline-none ${EDITOR_TYPE}`}
+            className={`absolute inset-0 resize-none overflow-auto border-0 bg-transparent text-transparent caret-accent outline-none ${EDITOR_TYPE}`}
           />
         </div>
       </div>
@@ -214,9 +214,9 @@ export function Playground() {
         {tab === "diagnostics" ? (
           <pre className="flex-1 overflow-auto p-5 font-mono text-[0.8rem] leading-[1.7]">
             {errored ? (
-              <span className="text-red-bright">{errored.join("\n\n")}</span>
+              <span className="text-bad">{errored.join("\n\n")}</span>
             ) : result?.warnings.length ? (
-              <span className="text-ember">{result.warnings.map((w) => `warning: ${w}`).join("\n")}</span>
+              <span className="text-warn">{result.warnings.map((w) => `warning: ${w}`).join("\n")}</span>
             ) : (
               <span className="text-muted">No diagnostics. Clean build.</span>
             )}
@@ -242,7 +242,7 @@ function PaneHead({ label, children }: { label: string; children?: React.ReactNo
 
 function StatusDot({ status, text }: { status: string; text: string }) {
   const color =
-    status === "ok" ? "bg-[#8fd98a]" : status === "warn" ? "bg-ember" : status === "err" ? "bg-red" : "bg-faint";
+    status === "ok" ? "bg-ok" : status === "warn" ? "bg-warn" : status === "err" ? "bg-bad" : "bg-faint";
   return (
     <span className="inline-flex items-center gap-1.5">
       <span className={`h-1.5 w-1.5 rounded-full ${color}`} />
@@ -266,7 +266,7 @@ function TabButton({
     <button
       onClick={onClick}
       className={`shrink-0 rounded-md px-3 py-1 font-mono text-xs transition-colors ${
-        active ? "bg-surface-2 text-text" : danger ? "text-red-bright" : "text-faint hover:text-muted"
+        active ? "bg-inset text-text" : danger ? "text-bad" : "text-faint hover:text-muted"
       }`}
     >
       {children}

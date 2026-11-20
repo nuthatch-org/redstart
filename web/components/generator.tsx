@@ -156,7 +156,7 @@ export function Generator() {
       <header className="mb-8">
         <span className="eyebrow">The Generator</span>
         <h1 className="display mt-3 text-3xl sm:text-4xl">
-          Paste a contract. Get a <span className="grad">tested subgraph.</span>
+          Paste a contract. Get a tested subgraph.
         </h1>
         <p className="mt-3 max-w-xl text-muted">
           Point it at any verified contract. It researches the ABI, proxies and start
@@ -175,12 +175,12 @@ export function Generator() {
             onKeyDown={(e) => e.key === "Enter" && lookup()}
             placeholder="0x…"
             spellCheck={false}
-            className="min-w-0 flex-1 rounded-lg border border-line-2 bg-bg-2 px-3 py-2.5 font-mono text-sm text-text outline-none placeholder:text-faint focus:border-red"
+            className="min-w-0 flex-1 rounded-lg border border-line-2 bg-elev px-3 py-2.5 font-mono text-sm text-text outline-none placeholder:text-faint focus:border-accent"
           />
           <select
             value={chainId}
             onChange={(e) => setChainId(Number(e.target.value))}
-            className="rounded-lg border border-line-2 bg-bg-2 px-3 py-2.5 text-sm text-text outline-none focus:border-red"
+            className="rounded-lg border border-line-2 bg-elev px-3 py-2.5 text-sm text-text outline-none focus:border-accent"
           >
             {CHAINS.map((c) => (
               <option key={c.id} value={c.id}>
@@ -199,7 +199,7 @@ export function Generator() {
       </div>
 
       {error && (
-        <div className="mt-4 rounded-lg border border-red/40 bg-red/5 px-4 py-3 text-sm text-red-bright">
+        <div className="mt-4 rounded-lg border border-bad/40 bg-bad/10 px-4 py-3 text-sm text-bad">
           {error}
         </div>
       )}
@@ -208,7 +208,7 @@ export function Generator() {
         <div className="mt-3 text-right">
           <button
             onClick={startOver}
-            className="font-mono text-xs text-faint transition-colors hover:text-red-bright"
+            className="font-mono text-xs text-faint transition-colors hover:text-accent"
           >
             start over ✕
           </button>
@@ -281,7 +281,7 @@ function ContractPanel({
           <Row
             label="address"
             value={
-              <a href={explorer} target="_blank" rel="noopener noreferrer" className="hover:text-red-bright">
+              <a href={explorer} target="_blank" rel="noopener noreferrer" className="hover:text-accent">
                 {shorten(contract.address)} ↗
               </a>
             }
@@ -332,7 +332,7 @@ function ContractPanel({
             placeholder="sk-ant-…"
             spellCheck={false}
             autoComplete="off"
-            className="min-w-0 flex-1 rounded-lg border border-line-2 bg-bg-2 px-3 py-2.5 font-mono text-sm text-text outline-none placeholder:text-faint focus:border-red"
+            className="min-w-0 flex-1 rounded-lg border border-line-2 bg-elev px-3 py-2.5 font-mono text-sm text-text outline-none placeholder:text-faint focus:border-accent"
           />
           <button
             onClick={onGenerate}
@@ -351,7 +351,7 @@ function ContractPanel({
             href="https://console.anthropic.com/settings/keys"
             target="_blank"
             rel="noopener noreferrer"
-            className="text-red-bright hover:underline"
+            className="text-accent hover:underline"
           >
             console.anthropic.com
           </a>
@@ -359,7 +359,7 @@ function ContractPanel({
         </p>
 
         <details className="mt-3 border-t border-line pt-3">
-          <summary className="cursor-pointer text-xs text-red-bright hover:underline">
+          <summary className="cursor-pointer text-xs text-accent hover:underline">
             No API key? Use your Claude subscription instead →
           </summary>
           <div className="mt-2 space-y-2 text-xs text-muted">
@@ -372,7 +372,7 @@ function ContractPanel({
             </p>
             <p className="text-faint">Claude Code — one command:</p>
             <div className="flex items-center gap-2">
-              <code className="flex-1 overflow-x-auto rounded-md border border-line-2 bg-bg-2 px-2.5 py-2 font-mono text-[0.7rem] text-text">
+              <code className="flex-1 overflow-x-auto rounded-md border border-line-2 bg-elev px-2.5 py-2 font-mono text-[0.7rem] text-text">
                 claude mcp add --transport http redstart {MCP_URL}
               </code>
               <CopyButton text={`claude mcp add --transport http redstart ${MCP_URL}`} />
@@ -398,7 +398,7 @@ function ContractPanel({
       {generating && <GeneratingPanel />}
 
       {genError && (
-        <div className="rounded-lg border border-red/40 bg-red/5 px-4 py-3 text-sm text-red-bright">
+        <div className="rounded-lg border border-bad/40 bg-bad/10 px-4 py-3 text-sm text-bad">
           {genError}
         </div>
       )}
@@ -549,11 +549,11 @@ function FilesPanel({
     <div className="card overflow-hidden">
       <VerifyBanner verifying={verifying} verdict={verdict} />
       {verdict && !verdict.ok && verdict.stage !== "config" && (
-        <div className="flex flex-wrap items-center gap-3 border-b border-line bg-red/5 px-4 py-2.5">
+        <div className="flex flex-wrap items-center gap-3 border-b border-line bg-bad/10 px-4 py-2.5">
           <button onClick={runFix} disabled={autoFixing || verifying} className="btn disabled:opacity-50">
             {autoFixing ? (
               <span className="flex items-center gap-2">
-                <span className="h-3 w-3 animate-spin rounded-full border-2 border-white/30 border-t-white" />
+                <span className="h-3 w-3 animate-spin rounded-full border-2 border-on-accent/30 border-t-on-accent" />
                 Fixing…
               </span>
             ) : (
@@ -566,11 +566,11 @@ function FilesPanel({
         </div>
       )}
       {fixError && (
-        <p className="border-b border-line px-4 py-2 text-xs text-red-bright">Auto-fix: {fixError}</p>
+        <p className="border-b border-line px-4 py-2 text-xs text-bad">Auto-fix: {fixError}</p>
       )}
       {files.notes && (
         <p className="border-b border-line px-4 py-3 text-sm text-muted">
-          <span className="mr-1.5 text-ember">⚡</span>
+          <span className="mr-1.5 text-accent">⚡</span>
           {files.notes}
         </p>
       )}
@@ -581,7 +581,7 @@ function FilesPanel({
               key={t.key}
               onClick={() => setTab(t.key)}
               className={`px-3 py-2.5 font-mono text-xs transition-colors ${
-                tab === t.key ? "text-red-bright" : "text-faint hover:text-muted"
+                tab === t.key ? "text-accent" : "text-faint hover:text-muted"
               }`}
             >
               {t.label}
@@ -597,13 +597,13 @@ function FilesPanel({
       <div className="border-t border-line px-4 py-3">
         {ghRepo ? (
           <div className="flex flex-wrap items-center justify-between gap-2">
-            <span className="text-sm text-emerald-400">
+            <span className="text-sm text-ok">
               ✓ Repo created —{" "}
               <a
                 href={ghRepo.url}
                 target="_blank"
                 rel="noopener noreferrer"
-                className="font-mono text-emerald-300 hover:underline"
+                className="font-mono text-ok hover:underline"
               >
                 {ghRepo.fullName} ↗
               </a>
@@ -641,7 +641,7 @@ function FilesPanel({
                     onChange={(e) => setRepoName(e.target.value)}
                     aria-label="Repository name"
                     spellCheck={false}
-                    className="w-44 rounded-lg border border-line-2 bg-bg-2 px-2.5 py-2 font-mono text-xs text-text outline-none focus:border-red"
+                    className="w-44 rounded-lg border border-line-2 bg-elev px-2.5 py-2 font-mono text-xs text-text outline-none focus:border-accent"
                   />
                   <button
                     onClick={createRepo}
@@ -666,7 +666,7 @@ function FilesPanel({
           </p>
         )}
         {ghError && (
-          <p className="mt-2 text-xs text-red-bright">GitHub: {ghError}</p>
+          <p className="mt-2 text-xs text-bad">GitHub: {ghError}</p>
         )}
       </div>
     </div>
@@ -691,11 +691,11 @@ function GeneratingPanel() {
   return (
     <div className="card overflow-hidden">
       <div className="h-[3px] w-full overflow-hidden bg-line">
-        <div className="loadbar h-full w-1/4 rounded-full bg-gradient-to-r from-red via-ember to-red" />
+        <div className="loadbar h-full w-1/4 rounded-full bg-accent" />
       </div>
       <div className="p-5">
         <div className="mb-4 flex items-center gap-3">
-          <span className="h-4 w-4 shrink-0 animate-spin rounded-full border-2 border-red/25 border-t-red" />
+          <span className="h-4 w-4 shrink-0 animate-spin rounded-full border-2 border-accent/25 border-t-accent" />
           <div>
             <p className="text-sm text-text">Generating with Claude Opus 4.8…</p>
             <p className="text-xs text-faint">
@@ -708,11 +708,11 @@ function GeneratingPanel() {
             <li key={s} className="flex items-center gap-2.5 text-sm">
               <span className="flex h-4 w-4 shrink-0 items-center justify-center">
                 {i < step ? (
-                  <span className="text-emerald-400">✓</span>
+                  <span className="text-ok">✓</span>
                 ) : i === step ? (
                   <span className="relative flex h-2 w-2">
-                    <span className="absolute inline-flex h-full w-full animate-ping rounded-full bg-ember opacity-75" />
-                    <span className="relative inline-flex h-2 w-2 rounded-full bg-ember" />
+                    <span className="absolute inline-flex h-full w-full animate-ping rounded-full bg-accent opacity-75" />
+                    <span className="relative inline-flex h-2 w-2 rounded-full bg-accent" />
                   </span>
                 ) : (
                   <span className="h-2 w-2 rounded-full border border-line-2" />
@@ -744,10 +744,10 @@ function VerifyBanner({
     return (
       <div className="border-b border-line">
         <div className="h-[3px] w-full overflow-hidden bg-line">
-          <div className="loadbar h-full w-1/4 rounded-full bg-gradient-to-r from-ember via-red to-ember" />
+          <div className="loadbar h-full w-1/4 rounded-full bg-accent" />
         </div>
-        <div className="flex items-center gap-2.5 bg-surface px-4 py-2.5 text-sm text-muted">
-          <span className="h-3.5 w-3.5 shrink-0 animate-spin rounded-full border-2 border-ember/25 border-t-ember" />
+        <div className="flex items-center gap-2.5 bg-inset px-4 py-2.5 text-sm text-muted">
+          <span className="h-3.5 w-3.5 shrink-0 animate-spin rounded-full border-2 border-accent/25 border-t-accent" />
           Compiling on the real Graph toolchain — running codegen, build &amp; test…
         </div>
       </div>
@@ -757,8 +757,8 @@ function VerifyBanner({
 
   if (verdict.ok) {
     return (
-      <div className="border-b border-emerald-500/25 bg-emerald-500/10 px-4 py-2.5 text-sm text-emerald-400">
-        ✓ Verified — <span className="text-emerald-300/80">graph codegen, build &amp; Matchstick tests all passed.</span>
+      <div className="border-b border-ok/25 bg-ok/10 px-4 py-2.5 text-sm text-ok">
+        ✓ Verified — <span className="text-text">graph codegen, build &amp; Matchstick tests all passed.</span>
       </div>
     );
   }
@@ -769,7 +769,7 @@ function VerifyBanner({
     <details className="border-b border-line" open={!isConfig}>
       <summary
         className={`cursor-pointer list-none px-4 py-2.5 text-sm ${
-          isConfig ? "text-muted" : "text-red-bright"
+          isConfig ? "text-muted" : "text-bad"
         }`}
       >
         {isConfig
@@ -796,7 +796,7 @@ function CopyButton({ text }: { text: string }) {
         setCopied(true);
         setTimeout(() => setCopied(false), 1200);
       }}
-      className="mr-1 rounded-md px-2 py-1 font-mono text-xs text-faint transition-colors hover:bg-surface hover:text-text"
+      className="mr-1 rounded-md px-2 py-1 font-mono text-xs text-faint transition-colors hover:bg-inset hover:text-text"
     >
       {copied ? "copied" : "copy"}
     </button>
@@ -814,12 +814,12 @@ function EventRow({
 }) {
   return (
     <li>
-      <label className="flex cursor-pointer items-center gap-3 rounded-md px-2 py-1.5 hover:bg-surface">
+      <label className="flex cursor-pointer items-center gap-3 rounded-md px-2 py-1.5 hover:bg-inset">
         <input
           type="checkbox"
           checked={checked}
           onChange={onToggle}
-          className="h-4 w-4 accent-red"
+          className="h-4 w-4 accent-accent"
         />
         <span className="font-mono text-sm text-text">{event.name}</span>
         <span className="truncate font-mono text-xs text-faint">
@@ -842,8 +842,8 @@ function Row({ label, value }: { label: string; value: React.ReactNode }) {
 function Badge({ tone, children }: { tone: "green" | "amber"; children: React.ReactNode }) {
   const cls =
     tone === "green"
-      ? "border-emerald-500/30 bg-emerald-500/10 text-emerald-400"
-      : "border-amber-500/30 bg-amber-500/10 text-amber-400";
+      ? "border-ok/30 bg-ok/10 text-ok"
+      : "border-warn/30 bg-warn/10 text-warn";
   return (
     <span className={`rounded-full border px-2 py-0.5 font-mono text-[0.68rem] ${cls}`}>
       {children}

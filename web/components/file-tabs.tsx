@@ -23,7 +23,7 @@ export function FileTabs({
             onClick={() => setActive(i)}
             className={`shrink-0 rounded-md px-3 py-1 font-mono text-xs transition-colors ${
               i === active
-                ? "bg-surface-2 text-text"
+                ? "bg-inset text-text"
                 : "text-faint hover:text-muted"
             }`}
           >

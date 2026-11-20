@@ -12,7 +12,7 @@ export function Footer() {
       <div className="mx-auto grid max-w-6xl gap-8 px-5 py-14 sm:grid-cols-[1.5fr_1fr_1fr]">
         <div>
           <span className="inline-flex items-center gap-2 text-[1.05rem]">
-            <Bird className="h-[1.15em] w-[1.15em] text-red" />
+            <Bird className="h-[1.15em] w-[1.15em] text-accent" />
             <span className="font-medium tracking-tight">Redstart</span>
           </span>
           <p className="mt-3 max-w-xs text-sm leading-relaxed text-muted">

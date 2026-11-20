@@ -13,7 +13,7 @@ export default function PlaygroundPage() {
     <div className="flex h-[calc(100dvh-3.5rem)] flex-col">
       <div className="flex flex-wrap items-center justify-between gap-2 border-b border-line px-5 py-2.5">
         <div className="flex items-center gap-2">
-          <Bird className="h-4 w-4 text-red" />
+          <Bird className="h-4 w-4 text-accent" />
           <span className="text-sm font-medium">Playground</span>
           <span className="hidden text-sm text-muted sm:inline">
             — the real compiler, compiled to WebAssembly. Nothing leaves your browser.

@@ -14,17 +14,17 @@ export function Nav() {
         <nav className="-mr-2 flex items-center text-sm text-muted sm:mr-0 sm:gap-1">
           <Link
             href="/generator"
-            className="group relative mr-1 flex items-center gap-1.5 rounded-full border border-red/40 bg-red/10 px-3 py-1.5 font-medium text-red-bright shadow-[0_0_16px_-5px_rgba(255,51,85,0.55)] transition-all hover:border-red-bright/70 hover:bg-red/20 hover:text-white hover:shadow-[0_0_24px_-3px_rgba(255,51,85,0.8)]"
+            className="group relative mr-1 flex items-center gap-1.5 rounded-full border border-accent/40 bg-accent/10 px-3 py-1.5 font-medium text-accent shadow-[0_0_16px_-5px_rgba(255,51,85,0.55)] transition-all hover:border-accent/70 hover:bg-accent/20 hover:text-white hover:shadow-[0_0_24px_-3px_rgba(255,51,85,0.8)]"
           >
             <span className="relative flex h-1.5 w-1.5">
-              <span className="absolute inline-flex h-full w-full animate-ping rounded-full bg-ember opacity-75" />
-              <span className="relative inline-flex h-1.5 w-1.5 rounded-full bg-ember" />
+              <span className="absolute inline-flex h-full w-full animate-ping rounded-full bg-accent opacity-75" />
+              <span className="relative inline-flex h-1.5 w-1.5 rounded-full bg-accent" />
             </span>
             Generator
           </Link>
           <Link
             href="/playground"
-            className="rounded-md px-2.5 py-1.5 transition-colors hover:bg-surface hover:text-text sm:px-3"
+            className="rounded-md px-2.5 py-1.5 transition-colors hover:bg-inset hover:text-text sm:px-3"
           >
             Playground
           </Link>
@@ -32,7 +32,7 @@ export function Nav() {
             href={DOCS}
             target="_blank"
             rel="noopener noreferrer"
-            className="rounded-md px-2.5 py-1.5 transition-colors hover:bg-surface hover:text-text sm:px-3"
+            className="rounded-md px-2.5 py-1.5 transition-colors hover:bg-inset hover:text-text sm:px-3"
           >
             Docs
           </a>
@@ -40,7 +40,7 @@ export function Nav() {
             href={REPO}
             target="_blank"
             rel="noopener noreferrer"
-            className="rounded-md px-2.5 py-1.5 transition-colors hover:bg-surface hover:text-text sm:px-3"
+            className="rounded-md px-2.5 py-1.5 transition-colors hover:bg-inset hover:text-text sm:px-3"
           >
             GitHub
           </a>

@@ -6,31 +6,30 @@ export const alt = "Redstart — one language for The Graph subgraphs";
 export const size = { width: 1200, height: 630 };
 export const contentType = "image/png";
 
-const BG = "#08080c";
-const TEXT = "#ededf2";
-const MUTED = "#9a9aab";
-const RED = "#ff3355";
-const EMBER = "#ff7a45";
+const BG = "#171614";
+const TEXT = "#ece9e3";
+const MUTED = "#9c978c";
+const ACCENT = "#d0704f";
+const ACCENT_INK = "#f2cbbb";
 
 function Bird({ s, color }: { s: number; color: string }) {
   return (
     <svg width={s} height={s} viewBox="0 0 32 32">
-      <path d="M15.6 21 L13.9 28.4 L19.4 26.8 L18.4 20.4 Z" fill={EMBER} />
+      <path d="M15.6 21 L13.9 28.4 L19.4 26.8 L18.4 20.4 Z" fill={ACCENT_INK} />
       <circle cx="13.4" cy="11" r="4.7" fill={color} />
       <path
         d="M9.4 14 C8.9 18.4 11.4 22.4 15.4 22.4 C19.7 22.4 21.2 17.9 19.8 14.1 C18.7 11.5 15.8 10.3 13.4 11.3 Z"
         fill={color}
       />
       <path d="M9.2 10.2 L4.4 9.7 L9.4 12.3 Z" fill={color} />
-      <circle cx="11.5" cy="10" r="1.15" fill="#0d0d14" />
+      <circle cx="11.5" cy="10" r="1.15" fill={BG} />
     </svg>
   );
 }
 
 export default async function Image() {
-  const [display, displayBold, mono] = await Promise.all([
+  const [display, mono] = await Promise.all([
     readFile(join(process.cwd(), "assets/SpaceGrotesk-Medium.woff")),
-    readFile(join(process.cwd(), "assets/SpaceGrotesk-Bold.woff")),
     readFile(join(process.cwd(), "assets/JetBrainsMono-Regular.ttf")),
   ]);
 
@@ -49,22 +48,18 @@ export default async function Image() {
           position: "relative",
         }}
       >
-        {/* nebula glows */}
-        <div style={{ position: "absolute", top: -260, left: -160, width: 700, height: 700, borderRadius: 9999, background: "radial-gradient(closest-side, rgba(255,51,85,0.22), transparent)" }} />
-        <div style={{ position: "absolute", bottom: -300, right: -120, width: 640, height: 640, borderRadius: 9999, background: "radial-gradient(closest-side, rgba(255,122,69,0.16), transparent)" }} />
-
         {/* wordmark */}
         <div style={{ display: "flex", alignItems: "center", gap: 16 }}>
-          <Bird s={36} color={RED} />
+          <Bird s={36} color={ACCENT} />
           <span style={{ fontFamily: "JetBrains Mono", fontSize: 28, letterSpacing: "0.01em", color: TEXT }}>Redstart</span>
         </div>
 
         {/* tagline */}
         <div style={{ display: "flex", flexDirection: "column", fontFamily: "Space Grotesk" }}>
-          <span style={{ fontSize: 88, fontWeight: 700, lineHeight: 1.0, color: TEXT, letterSpacing: "-0.03em" }}>
+          <span style={{ fontSize: 88, fontWeight: 500, lineHeight: 1.0, color: TEXT, letterSpacing: "-0.03em" }}>
             Write the subgraph once.
           </span>
-          <span style={{ fontSize: 88, fontWeight: 700, lineHeight: 1.0, color: EMBER, letterSpacing: "-0.03em" }}>
+          <span style={{ fontSize: 88, fontWeight: 500, lineHeight: 1.0, color: ACCENT, letterSpacing: "-0.03em" }}>
             Properly.
           </span>
         </div>
@@ -90,7 +85,6 @@ export default async function Image() {
       ...size,
       fonts: [
         { name: "Space Grotesk", data: display, style: "normal", weight: 500 },
-        { name: "Space Grotesk", data: displayBold, style: "normal", weight: 700 },
         { name: "JetBrains Mono", data: mono, style: "normal", weight: 400 },
       ],
     },

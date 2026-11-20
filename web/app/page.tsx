@@ -65,7 +65,7 @@ export default function Home() {
             <h1 className="display mt-6 max-w-3xl text-4xl sm:text-6xl md:text-7xl">
               Write the subgraph once.
               <br />
-              <span className="grad">Properly.</span>
+              <span className="text-accent">Properly.</span>
             </h1>
           </Reveal>
           <Reveal i={2}>
@@ -89,8 +89,8 @@ export default function Home() {
             </div>
           </Reveal>
           <Reveal i={4}>
-            <div className="mt-6 flex w-full max-w-full items-center gap-3 overflow-x-auto rounded-lg border border-line bg-surface px-4 py-2.5 font-mono text-xs text-text/90 sm:inline-flex sm:w-auto sm:text-sm">
-              <span className="shrink-0 text-red-bright">$</span>
+            <div className="mt-6 flex w-full max-w-full items-center gap-3 overflow-x-auto rounded-lg border border-line bg-inset px-4 py-2.5 font-mono text-xs text-text/90 sm:inline-flex sm:w-auto sm:text-sm">
+              <span className="shrink-0 text-accent">$</span>
               <span className="whitespace-nowrap">curl -fsSL redstart-lang.com/install.sh | sh</span>
             </div>
           </Reveal>
@@ -111,7 +111,7 @@ export default function Home() {
             <Reveal i={1} className="flex flex-col gap-3">
               <div className="flex items-center justify-between">
                 <span className="inline-flex items-center gap-2 text-sm font-medium">
-                  <Bird className="h-4 w-4 text-red" /> Redstart
+                  <Bird className="h-4 w-4 text-accent" /> Redstart
                 </span>
                 <span className="font-mono text-xs text-faint">
                   1 file · drift impossible
@@ -167,10 +167,10 @@ export default function Home() {
                 key={f.t}
                 i={i % 3}
                 as="article"
-                className="group bg-bg-2 p-7 transition-colors hover:bg-surface"
+                className="group bg-elev p-7 transition-colors hover:bg-inset"
               >
                 <div className="flex items-center gap-2 text-sm font-medium">
-                  <span className="font-mono text-red-bright">✕</span>
+                  <span className="font-mono text-accent">✕</span>
                   {f.t}
                 </div>
                 <p className="mt-2.5 text-sm leading-relaxed text-muted">
@@ -209,35 +209,32 @@ export default function Home() {
           <Reveal i={1}>
             <div className="card p-7 font-mono text-sm">
               <div className="flex items-center gap-2 text-text">
-                <Bird className="h-4 w-4 text-red" /> token.red
+                <Bird className="h-4 w-4 text-accent" /> token.red
               </div>
               <div className="my-4 ml-1.5 border-l border-line pl-5 text-faint">
                 <div className="relative">
-                  <span className="absolute -left-[1.42rem] text-red-bright">↓</span>
+                  <span className="absolute -left-[1.42rem] text-accent">↓</span>
                   redstart build
                 </div>
               </div>
               <div className="grid gap-2 text-text/90">
-                <div className="rounded-md border border-line bg-surface px-3 py-2">
+                <div className="rounded-md border border-line bg-inset px-3 py-2">
                   schema.graphql
                 </div>
-                <div className="rounded-md border border-line bg-surface px-3 py-2">
+                <div className="rounded-md border border-line bg-inset px-3 py-2">
                   subgraph.yaml
                 </div>
-                <div className="rounded-md border border-line bg-surface px-3 py-2">
+                <div className="rounded-md border border-line bg-inset px-3 py-2">
                   src/mappings.ts
                 </div>
               </div>
               <div className="my-4 ml-1.5 border-l border-line pl-5 text-faint">
                 <div className="relative">
-                  <span className="absolute -left-[1.42rem] text-red-bright">↓</span>
+                  <span className="absolute -left-[1.42rem] text-accent">↓</span>
                   graph codegen · graph build
                 </div>
               </div>
-              <div
-                className="rounded-md px-3 py-2 text-center font-medium text-white"
-                style={{ background: "linear-gradient(120deg, #ff3355, #ff7a45)" }}
-              >
+              <div className="rounded-md bg-accent px-3 py-2 text-center font-medium text-on-accent">
                 compiles unmodified → WASM
               </div>
             </div>
@@ -247,15 +244,11 @@ export default function Home() {
 
       {/* ---- Final CTA ---- */}
       <section className="relative overflow-hidden">
-        <div
-          className="pointer-events-none absolute left-1/2 top-1/2 h-[60vh] w-[60vh] -translate-x-1/2 -translate-y-1/2 rounded-full"
-          style={{ background: "radial-gradient(closest-side, rgba(255,51,85,0.18), transparent)" }}
-        />
         <div className="relative mx-auto max-w-6xl px-5 py-20 sm:py-28 text-center">
           <Reveal>
-            <Bird glow className="mx-auto h-12 w-12 text-red" />
+            <Bird className="mx-auto h-12 w-12 text-accent" />
             <h2 className="display mx-auto mt-6 max-w-2xl text-4xl sm:text-6xl">
-              See the drift <span className="grad">disappear.</span>
+              See the drift <span className="text-accent">disappear.</span>
             </h2>
             <p className="mx-auto mt-5 max-w-md text-muted">
               The playground runs the real compiler in your browser. Type
