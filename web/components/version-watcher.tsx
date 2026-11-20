@@ -4,7 +4,7 @@ import { useEffect, useState } from "react";
 
 // Polls /api/version and compares the running deployment's id against the id this
 // bundle was built with. When they diverge, the server has shipped a newer build
-// and this tab is stale — show a reload nudge. This is the antidote to "I fixed it
+// and this tab is stale, so show a reload nudge. This is the antidote to "I fixed it
 // but the browser is still running last week's JS".
 
 const BUILD_ID = process.env.NEXT_PUBLIC_BUILD_ID || "dev";
@@ -25,7 +25,7 @@ export function VersionWatcher() {
         const { id } = (await res.json()) as { id: string };
         if (live && id && id !== "dev" && id !== BUILD_ID) setStale(true);
       } catch {
-        /* offline / transient — try again next tick */
+        /* offline / transient: try again next tick */
       }
     }
 
@@ -43,7 +43,7 @@ export function VersionWatcher() {
   if (!stale) return null;
 
   return (
-    <div className="fixed inset-x-0 bottom-0 z-50 flex items-center justify-center gap-3 border-t border-red/40 bg-red/10 px-4 py-2.5 backdrop-blur">
+    <div className="fixed inset-x-0 bottom-0 z-50 flex items-center justify-center gap-3 border-t border-accent/40 bg-accent/10 px-4 py-2.5 backdrop-blur">
       <span className="text-sm text-text">
         A new version of The Generator is available.
       </span>

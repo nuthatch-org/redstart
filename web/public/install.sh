@@ -71,7 +71,7 @@ if dlo "$base/$checksum" "$tmp/$checksum" 2>/dev/null; then
     actual="$(shasum -a 256 "$tmp/$archive" | cut -d' ' -f1)"
   else
     actual="$expected"  # no tool to verify; trust the transport
-    info "no sha256 tool found — skipping checksum verification"
+    info "no sha256 tool found, skipping checksum verification"
   fi
   [ "$actual" = "$expected" ] || err "checksum mismatch (expected $expected, got $actual)"
   info "checksum verified"

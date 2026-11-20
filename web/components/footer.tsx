@@ -1,5 +1,5 @@
 import Link from "next/link";
-import { Bird } from "./logo";
+import { Wordmark } from "./logo";
 
 const REPO = "https://github.com/nuthatch-org/redstart";
 const DOCS = "https://nuthatch-org.github.io/redstart/";
@@ -11,10 +11,7 @@ export function Footer() {
     <footer className="relative border-t border-line">
       <div className="mx-auto grid max-w-6xl gap-8 px-5 py-14 sm:grid-cols-[1.5fr_1fr_1fr]">
         <div>
-          <span className="inline-flex items-center gap-2 text-[1.05rem]">
-            <Bird className="h-[1.15em] w-[1.15em] text-red" />
-            <span className="font-medium tracking-tight">Redstart</span>
-          </span>
+          <Wordmark className="text-[1.05rem]" />
           <p className="mt-3 max-w-xs text-sm leading-relaxed text-muted">
             One typed language for The Graph subgraphs. An open-source public
             good, in the lineage of Matchstick.
@@ -46,10 +43,10 @@ export function Footer() {
         </div>
       </div>
       <div className="border-t border-line">
-        <div className="mx-auto flex max-w-6xl items-center justify-between px-5 py-4 text-xs text-faint">
+        <div className="mx-auto flex max-w-6xl flex-col gap-1 px-5 py-4 text-xs text-muted sm:flex-row sm:items-center sm:justify-between">
           <span>MIT licensed · The Lodestar Team</span>
           <span className="font-mono">
-            redstart-lang.com <span className="text-faint/60">· build {BUILD}</span>
+            redstart-lang.com <span className="text-faint">· build {BUILD}</span>
           </span>
         </div>
       </div>

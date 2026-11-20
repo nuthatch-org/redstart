@@ -3,7 +3,6 @@ import { Reveal } from "@/components/reveal";
 import { CodeBlock } from "@/components/code";
 import { FileTabs } from "@/components/file-tabs";
 import { Bird } from "@/components/logo";
-import { Constellation } from "@/components/constellation";
 import {
   REDSTART_ERC20,
   AS_MAPPINGS,
@@ -12,6 +11,45 @@ import {
 } from "@/lib/samples";
 
 const REPO = "https://github.com/nuthatch-org/redstart";
+const DOCS = "https://nuthatch-org.github.io/redstart/";
+
+// Each figure is from the repo: README kill-gate and eject-path results, and
+// the explanation table behind `redstart explain` (crates/redstart-checker/src/explain.rs).
+const PROOF = [
+  {
+    n: "0",
+    unit: "differences",
+    d: "Store-diffed against a hand-written reference on a live graph-node: 10 Account and 13 Transfer entities at Arbitrum One block 477,660,492.",
+  },
+  {
+    n: "0",
+    unit: "manual edits",
+    d: "graph codegen and graph build compile the emitted subgraph to WebAssembly unmodified.",
+  },
+  {
+    n: "37",
+    unit: "diagnostic codes",
+    d: "Each one explained by redstart explain: what tripped it, and the fix.",
+  },
+];
+
+const DOES = [
+  "Unify schema, manifest and mappings in one typed source, across as many .red modules as you like.",
+  "Emit readable AssemblyScript that graph build compiles unmodified.",
+  "Handle events, calls, blocks and files, with templates and dynamic data sources.",
+  "Test handlers natively with redstart test: no WASM, Docker or Matchstick.",
+  "Ship a language server, with VS Code and Zed extensions.",
+  "Deploy to Subgraph Studio or a self-hosted graph-node.",
+];
+
+const DOESNT = [
+  "Make indexing faster. It makes staying on The Graph pleasant.",
+  "Expose event.receipt, so a handler cannot read neighbouring logs.",
+  "Run call handlers where there is no Parity-style tracing, which is most L2s. W010 warns.",
+  "Deploy one manifest to several networks. That stays in your own configuration.",
+  "Parse a ternary or a module-level constant. Use an if, or a helper fn.",
+  "Emit fulltext search yet.",
+];
 
 const FOOTGUNS = [
   {
@@ -20,7 +58,7 @@ const FOOTGUNS = [
   },
   {
     t: "Arithmetic on null",
-    d: "There is no null — only Option<T>. Maths on a maybe-absent value is a compile error, not a silent miscompile.",
+    d: "There is no null, only Option<T>. Maths on a maybe-absent value is a compile error, not a silent miscompile.",
   },
   {
     t: "Reverted calls aborting",
@@ -40,11 +78,15 @@ const FOOTGUNS = [
   },
   {
     t: "Non-determinism",
-    d: "Date.now() and Math.random() are a compile error — they diverge Proof-of-Indexing across indexers and get them slashed.",
+    d: "Date.now() and Math.random() are compile errors. They diverge Proof-of-Indexing across indexers and get them slashed.",
+  },
+  {
+    t: "Division by zero",
+    d: "A statically zero denominator is a compile error. graph-node would halt the sync on it, deterministically, every time.",
   },
   {
     t: "eth_call in a loop",
-    d: "A contract call inside a loop — the documented 'stuck at 3%' sync killer — is flagged before you deploy it.",
+    d: "A contract call inside a loop, the documented 'stuck at 3%' sync killer, is flagged before you deploy it.",
   },
 ];
 
@@ -54,27 +96,25 @@ export default function Home() {
       {/* ---- Hero ---- */}
       <section className="relative overflow-hidden border-b border-line">
         <div className="relative mx-auto max-w-6xl px-5 pb-16 pt-16 sm:pb-24 sm:pt-28">
-          <Constellation className="pointer-events-none absolute right-0 top-6 hidden h-[420px] w-[420px] opacity-90 lg:block" />
           <Reveal>
             <span className="tag">
               <Bird className="h-3.5 w-3.5" />
-              the sexiest language for authoring The Graph subgraphs
+              one typed language for The Graph subgraphs
             </span>
           </Reveal>
           <Reveal i={1}>
             <h1 className="display mt-6 max-w-3xl text-4xl sm:text-6xl md:text-7xl">
               Write the subgraph once.
               <br />
-              <span className="grad">Properly.</span>
+              <span className="text-accent">Properly.</span>
             </h1>
           </Reveal>
           <Reveal i={2}>
             <p className="mt-6 max-w-xl text-lg leading-relaxed text-muted">
-              The most performant and secure language for authoring The Graph
-              subgraphs. One typed source for schema, manifest, and mappings —
-              compiled to AssemblyScript that&apos;s faster and safer than any
-              human would hand-write. <span className="text-text">If it compiles,
-              it works.</span>
+              One typed source for schema, manifest and mappings, compiled to
+              readable AssemblyScript that{" "}
+              <code className="font-mono text-text">graph build</code> compiles
+              unmodified. <span className="text-text">If it compiles, it works.</span>
             </p>
           </Reveal>
           <Reveal i={3}>
@@ -89,47 +129,70 @@ export default function Home() {
             </div>
           </Reveal>
           <Reveal i={4}>
-            <div className="mt-6 flex w-full max-w-full items-center gap-3 overflow-x-auto rounded-lg border border-line bg-surface px-4 py-2.5 font-mono text-xs text-text/90 sm:inline-flex sm:w-auto sm:text-sm">
-              <span className="shrink-0 text-red-bright">$</span>
-              <span className="whitespace-nowrap">curl -fsSL redstart-lang.com/install.sh | sh</span>
+            <div className="mt-6 flex w-full max-w-full items-start gap-3 rounded-lg border border-line bg-inset px-4 py-2.5 font-mono text-xs text-text/90 sm:inline-flex sm:w-auto sm:text-sm">
+              <span className="shrink-0 text-accent">$</span>
+              <span className="min-w-0 whitespace-pre-wrap [overflow-wrap:anywhere]">curl -fsSL redstart-lang.com/install.sh | sh</span>
             </div>
           </Reveal>
         </div>
       </section>
 
-      {/* ---- Would you rather maintain this — or this? ---- */}
+      {/* ---- Proof ---- */}
+      <section className="border-b border-line bg-elev">
+        <div className="mx-auto max-w-6xl px-5 py-12 sm:py-16">
+          <Reveal>
+            <p className="eyebrow">Proven, not promised</p>
+          </Reveal>
+          <div className="mt-8 grid gap-10 sm:grid-cols-3 sm:gap-8">
+            {PROOF.map((p, i) => (
+              <Reveal key={p.unit} i={i} className="min-w-0">
+                <div className="display text-5xl tabular-nums sm:text-6xl">
+                  {p.n}
+                  <span className="ml-2 font-mono text-sm uppercase tracking-[0.12em] text-accent">
+                    {p.unit}
+                  </span>
+                </div>
+                <p className="mt-3 max-w-[34ch] text-muted">{p.d}</p>
+              </Reveal>
+            ))}
+          </div>
+        </div>
+      </section>
+
+      {/* ---- Would you rather maintain this, or this? ---- */}
       <section className="border-b border-line">
         <div className="mx-auto max-w-6xl px-5 py-16 sm:py-24">
           <Reveal>
             <p className="eyebrow">The pitch</p>
             <h2 className="display mt-3 max-w-2xl text-4xl sm:text-5xl">
-              Would you rather write &amp; maintain this —
+              Would you rather write and maintain this
             </h2>
           </Reveal>
 
           <div className="mt-12 grid items-start gap-6 lg:grid-cols-2">
-            <Reveal i={1} className="flex flex-col gap-3">
-              <div className="flex items-center justify-between">
+            <Reveal i={1} className="flex min-w-0 flex-col gap-3">
+              <div className="flex items-center justify-between gap-3">
                 <span className="inline-flex items-center gap-2 text-sm font-medium">
-                  <Bird className="h-4 w-4 text-red" /> Redstart
+                  <Bird className="h-4 w-4 text-accent" /> Redstart
                 </span>
-                <span className="font-mono text-xs text-faint">
+                <span className="font-mono text-xs text-muted">
                   1 file · drift impossible
                 </span>
               </div>
               <CodeBlock code={REDSTART_ERC20} lang="red" filename="token.red" />
             </Reveal>
 
-            <Reveal i={2} className="flex flex-col gap-3">
-              <div className="flex items-center justify-between">
+            <Reveal i={2} className="flex min-w-0 flex-col gap-3">
+              <div className="flex items-center justify-between gap-3">
                 <span className="text-sm font-medium text-muted">
                   …or these three, kept in sync by hand?
                 </span>
-                <span className="font-mono text-xs text-faint">
+                <span className="font-mono text-xs text-muted">
                   3 files · names must agree
                 </span>
               </div>
               <FileTabs
+                muted
                 className="min-h-[360px]"
                 files={[
                   { name: "mappings.ts", lang: "ts", code: AS_MAPPINGS },
@@ -144,9 +207,9 @@ export default function Home() {
               Both produce the same store. Only one of them can&apos;t drift,
               can&apos;t forget a{" "}
               <code className="font-mono text-text">.save()</code>, and
-              can&apos;t let a renamed event compile. The AssemblyScript on the
-              right is the genuine hand-written reference from our conformance
-              suite — not a strawman.
+              can&apos;t let a renamed event compile. The AssemblyScript is the
+              genuine hand-written reference from our conformance suite, not a
+              strawman.
             </p>
           </Reveal>
         </div>
@@ -167,10 +230,10 @@ export default function Home() {
                 key={f.t}
                 i={i % 3}
                 as="article"
-                className="group bg-bg-2 p-7 transition-colors hover:bg-surface"
+                className="bg-elev p-7 sm:last:col-span-2 lg:last:col-span-1"
               >
                 <div className="flex items-center gap-2 text-sm font-medium">
-                  <span className="font-mono text-red-bright">✕</span>
+                  <span className="font-mono text-accent">✕</span>
                   {f.t}
                 </div>
                 <p className="mt-2.5 text-sm leading-relaxed text-muted">
@@ -192,52 +255,42 @@ export default function Home() {
             </h2>
             <p className="mt-5 max-w-lg leading-relaxed text-muted">
               <code className="font-mono text-text">redstart build</code> emits
-              the exact files a hand-written subgraph has — readable, idiomatic
+              the exact files a hand-written subgraph has: readable, idiomatic
               AssemblyScript and GraphQL that{" "}
               <code className="font-mono text-text">graph build</code> compiles
               unmodified. Walk away whenever you like; you keep the generated
               code, and it keeps working.
             </p>
-            <p className="mt-4 max-w-lg leading-relaxed text-muted">
-              And it&apos;s <span className="text-text">proven</span>, not promised:
-              deployed to a live graph-node against an independent hand-written
-              reference, our lowered AssemblyScript store-diffed{" "}
-              <span className="text-text">0 differences</span> across every entity
-              and field — byte-identical indexing.
-            </p>
           </Reveal>
           <Reveal i={1}>
             <div className="card p-7 font-mono text-sm">
               <div className="flex items-center gap-2 text-text">
-                <Bird className="h-4 w-4 text-red" /> token.red
+                <Bird className="h-4 w-4 text-accent" /> token.red
               </div>
-              <div className="my-4 ml-1.5 border-l border-line pl-5 text-faint">
+              <div className="my-4 ml-1.5 border-l border-line pl-5 text-muted">
                 <div className="relative">
-                  <span className="absolute -left-[1.42rem] text-red-bright">↓</span>
+                  <span className="absolute -left-[1.42rem] text-accent">↓</span>
                   redstart build
                 </div>
               </div>
               <div className="grid gap-2 text-text/90">
-                <div className="rounded-md border border-line bg-surface px-3 py-2">
+                <div className="rounded-md border border-line bg-inset px-3 py-2">
                   schema.graphql
                 </div>
-                <div className="rounded-md border border-line bg-surface px-3 py-2">
+                <div className="rounded-md border border-line bg-inset px-3 py-2">
                   subgraph.yaml
                 </div>
-                <div className="rounded-md border border-line bg-surface px-3 py-2">
+                <div className="rounded-md border border-line bg-inset px-3 py-2">
                   src/mappings.ts
                 </div>
               </div>
-              <div className="my-4 ml-1.5 border-l border-line pl-5 text-faint">
+              <div className="my-4 ml-1.5 border-l border-line pl-5 text-muted">
                 <div className="relative">
-                  <span className="absolute -left-[1.42rem] text-red-bright">↓</span>
+                  <span className="absolute -left-[1.42rem] text-accent">↓</span>
                   graph codegen · graph build
                 </div>
               </div>
-              <div
-                className="rounded-md px-3 py-2 text-center font-medium text-white"
-                style={{ background: "linear-gradient(120deg, #ff3355, #ff7a45)" }}
-              >
+              <div className="rounded-md bg-accent px-3 py-2 text-center font-medium text-on-accent">
                 compiles unmodified → WASM
               </div>
             </div>
@@ -245,23 +298,62 @@ export default function Home() {
         </div>
       </section>
 
+      {/* ---- Scope ---- */}
+      <section className="border-b border-line">
+        <div className="mx-auto max-w-6xl px-5 py-16 sm:py-24">
+          <Reveal>
+            <p className="eyebrow">Scope</p>
+            <h2 className="display mt-3 max-w-2xl text-4xl sm:text-5xl">
+              What it does, and what it doesn&apos;t.
+            </h2>
+          </Reveal>
+          <div className="mt-12 grid gap-px overflow-hidden rounded-[10px] border border-line bg-line md:grid-cols-2">
+            {[
+              { label: "It does", tone: "text-ok", items: DOES },
+              { label: "It doesn\u2019t", tone: "text-accent", items: DOESNT },
+            ].map((col, i) => (
+              <Reveal key={col.label} i={i} className="min-w-0 bg-elev p-7">
+                <p className={`font-mono text-xs uppercase tracking-[0.12em] ${col.tone}`}>
+                  {col.label}
+                </p>
+                <ul className="mt-5 space-y-3">
+                  {col.items.map((item) => (
+                    <li key={item} className="flex gap-3 leading-relaxed text-muted">
+                      <span aria-hidden className={`font-mono ${col.tone}`}>
+                        {i === 0 ? "+" : "-"}
+                      </span>
+                      {item}
+                    </li>
+                  ))}
+                </ul>
+              </Reveal>
+            ))}
+          </div>
+          <Reveal>
+            <p className="mt-8 max-w-2xl text-muted">
+              The{" "}
+              <a href={`${DOCS}porting.html`} className="text-accent hover:underline">
+                porting guide
+              </a>{" "}
+              covers each limit, and the pattern that replaces receipt inspection.
+            </p>
+          </Reveal>
+        </div>
+      </section>
+
       {/* ---- Final CTA ---- */}
       <section className="relative overflow-hidden">
-        <div
-          className="pointer-events-none absolute left-1/2 top-1/2 h-[60vh] w-[60vh] -translate-x-1/2 -translate-y-1/2 rounded-full"
-          style={{ background: "radial-gradient(closest-side, rgba(255,51,85,0.18), transparent)" }}
-        />
         <div className="relative mx-auto max-w-6xl px-5 py-20 sm:py-28 text-center">
           <Reveal>
-            <Bird glow className="mx-auto h-12 w-12 text-red" />
+            <Bird className="mx-auto h-12 w-12 text-accent" />
             <h2 className="display mx-auto mt-6 max-w-2xl text-4xl sm:text-6xl">
-              See the drift <span className="grad">disappear.</span>
+              See the drift <span className="text-accent">disappear.</span>
             </h2>
             <p className="mx-auto mt-5 max-w-md text-muted">
               The playground runs the real compiler in your browser. Type
               Redstart, watch the three files generate live.
             </p>
-            <div className="mt-8 flex justify-center gap-3">
+            <div className="mt-8 flex flex-wrap justify-center gap-3">
               <Link href="/playground" className="btn">
                 Open the playground
                 <span aria-hidden>→</span>

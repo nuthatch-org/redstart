@@ -3,7 +3,7 @@
 // The request is made directly from the browser with the documented
 // `anthropic-dangerous-direct-browser-access` header, so the key never touches
 // our server. Structured outputs (`output_config.format`) force a clean JSON
-// object with the three subgraph files — no markdown-fence parsing.
+// object with the three subgraph files, so no markdown-fence parsing.
 
 import type { ContractInfo, EventDef } from "./subgraph-abi";
 
@@ -12,7 +12,7 @@ export interface GeneratedSubgraph {
   manifest: string; // subgraph.yaml
   mappings: string; // src/mapping.ts (AssemblyScript)
   tests: string; // tests/<name>.test.ts (Matchstick)
-  testUtils: string; // tests/utils.ts — event factory helpers
+  testUtils: string; // tests/utils.ts: event factory helpers
   notes: string; // short human summary of decisions made
 }
 
@@ -29,7 +29,7 @@ const SYSTEM = `You are an expert The Graph subgraph engineer. You generate a co
 CRITICAL: the mappings are AssemblyScript, NOT TypeScript. AssemblyScript is a strict, statically-typed subset compiled to WebAssembly. Never emit TypeScript idioms that do not compile under \`asc\`.
 
 SCHEMA (schema.graphql):
-- EVERY \`@entity\` MUST carry an explicit immutable argument — \`@entity(immutable: true)\` or \`@entity(immutable: false)\`. A bare \`@entity\` is REJECTED ("@entity directive requires \`immutable\` argument").
+- EVERY \`@entity\` MUST carry an explicit immutable argument: \`@entity(immutable: true)\` or \`@entity(immutable: false)\`. A bare \`@entity\` is REJECTED ("@entity directive requires \`immutable\` argument").
 - Use \`Bytes!\` for IDs derived from addresses or hashes; never concatenate strings for a single-value id.
 - Mark event-log/append-only entities \`@entity(immutable: true)\`; use \`@entity(immutable: false)\` where state genuinely updates (balances, owners, counters).
 - Model one-to-many relations with \`@derivedFrom(field: "...")\`; never store a growing array on the parent.
@@ -55,10 +55,10 @@ MAPPINGS (src/mapping.ts, AssemblyScript):
 
 Match entity modelling to the contract kind (ERC-20: Account/Transfer with balances; ERC-721/1155: Token/Owner/Transfer; unknown: one immutable entity per selected event). Only index the events the user selected.
 
-TESTS (Matchstick — \`tests\` is tests/<name>.test.ts, \`testUtils\` is tests/utils.ts):
+TESTS (Matchstick: \`tests\` is tests/<name>.test.ts, \`testUtils\` is tests/utils.ts):
 - \`tests/utils.ts\`: export one factory per handled event that builds a mock event with \`newMockEvent()\`, then sets \`.parameters\` via \`new ethereum.EventParam(name, ethereum.Value.fromX(...))\` for each arg, matching the ABI types exactly (address→\`fromAddress\`, uint→\`fromUnsignedBigInt\`, bytes→\`fromBytes\`, bool→\`fromBoolean\`, string→\`fromString\`). Import \`newMockEvent\` from \`matchstick-as/assembly/index\` and \`ethereum, Address, BigInt, Bytes\` from \`@graphprotocol/graph-ts\`. Also import the generated event class(es) from \`../generated/<DataSource>/<Contract>\` and return that type (cast the mock: build a \`new XEvent(mock.address, mock.logIndex, ...)\` OR reuse the changetype pattern \`changetype<XEvent>(newMockEvent())\` then assign params).
 - \`tests/<name>.test.ts\`: import \`assert, describe, test, clearStore, beforeAll, afterAll\` from \`matchstick-as/assembly/index\`, the handler(s) from \`../src/mapping\`, and the factories from \`./utils\`. In a \`describe\`, write at least one \`test\` per handler: build a mock event with realistic-looking values, call the handler, then \`assert.entityCount(...)\` and \`assert.fieldEquals("Entity", id, "field", expected)\`. Use \`beforeAll\`/\`afterAll\` with \`clearStore()\`.
-- These are AssemblyScript too — same rules (no \`===\`, no TS idioms). They must compile under \`graph test\`.
+- These are AssemblyScript too, with the same rules (no \`===\`, no TS idioms). They must compile under \`graph test\`.
 
 Output ONLY the structured object with all fields. \`notes\` is 1-3 short sentences on the key modelling decisions.`;
 
@@ -95,11 +95,11 @@ Kind: ${contract.kind}
 Data source name (use for the manifest name and the generated import path): ${dataSourceName}
 Address (index at this address): ${contract.address}
 Network: ${contract.graphNetwork}
-Start block: ${contract.startBlock ?? "0 (unknown — use 0)"}
-${contract.isProxy ? `Proxy: yes — implementation ${contract.implementation}. Index the proxy address with the implementation ABI.` : ""}
+Start block: ${contract.startBlock ?? "0 (unknown, use 0)"}
+${contract.isProxy ? `Proxy: yes, implementation ${contract.implementation}. Index the proxy address with the implementation ABI.` : ""}
 
 Events to index (${selectedEvents.length}):
-${events || "(none — this should not happen)"}
+${events || "(none; this should not happen)"}
 
 Full ABI (JSON):
 ${JSON.stringify(contract.abi)}`;
@@ -196,7 +196,7 @@ ${files.tests}
 === tests/utils.ts ===
 ${files.testUtils}
 
-CONTRACT: ${contract.name} (${contract.kind}) on ${contract.graphNetwork}, indexed at ${contract.address}${contract.isProxy ? ` — proxy, implementation ${contract.implementation}` : ""}.
+CONTRACT: ${contract.name} (${contract.kind}) on ${contract.graphNetwork}, indexed at ${contract.address}${contract.isProxy ? `, a proxy with implementation ${contract.implementation}` : ""}.
 ABI (for reference):
 ${JSON.stringify(contract.abi)}
 

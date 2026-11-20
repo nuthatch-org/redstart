@@ -3,7 +3,7 @@ import type { NextRequest } from "next/server";
 // GitHub OAuth callback (popup flow). Exchanges the code for a user token using
 // the server-side client secret, then returns a tiny HTML page that hands the
 // token back to the opener window via postMessage and closes. The token is never
-// stored — the opener uses it immediately to create the repo, client-side.
+// stored: the opener uses it immediately to create the repo, client-side.
 
 export const dynamic = "force-dynamic";
 
@@ -11,7 +11,7 @@ function page(payload: Record<string, unknown>, origin: string): Response {
   // Embed the payload safely and postMessage it to the opener.
   const json = JSON.stringify(payload).replace(/</g, "\\u003c");
   const html = `<!doctype html><meta charset="utf-8"><title>Connecting…</title>
-<body style="background:#08080c;color:#ededf2;font-family:system-ui;display:grid;place-items:center;height:100vh;margin:0">
+<body style="background:#171614;color:#ece9e3;font-family:system-ui;display:grid;place-items:center;height:100vh;margin:0">
 <p>Finishing up… you can close this window.</p>
 <script>
   (function () {

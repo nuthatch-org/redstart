@@ -1,27 +1,28 @@
 @import "tailwindcss";
 
-/* ---- Cosmic / The-Graph-in-red design tokens ---- */
+/* Foundry tokens (cargopete/foundry tokens.css), flat texture. */
 @theme {
-  --color-bg: #08080c;
-  --color-bg-2: #0d0d14;
-  --color-surface: rgba(255, 255, 255, 0.035);
-  --color-surface-2: rgba(255, 255, 255, 0.06);
+  --color-bg: #171614;
+  --color-elev: #201f1c;
+  --color-code: #1b1a17;
+  --color-inset: #262420;
   --color-line: rgba(255, 255, 255, 0.09);
-  --color-line-2: rgba(255, 255, 255, 0.14);
+  --color-line-2: rgba(255, 255, 255, 0.16);
 
-  --color-text: #ededf2;
-  --color-muted: #9a9aab;
-  --color-faint: #65656f;
+  --color-text: #ece9e3;
+  --color-muted: #9c978c;
+  --color-faint: #6e6a61;
 
-  /* Red replaces The Graph's purple. */
-  --color-red: #ff3355;
-  --color-red-bright: #ff5e76;
-  --color-ember: #ff7a45;
-  --color-red-deep: #a60f33;
+  --color-accent: #d0704f;
+  --color-accent-ink: #f2cbbb;
+  --color-on-accent: #171614;
+  --color-bad: #e36b6b;
+  --color-ok: #86b592;
+  --color-warn: #cdb06a;
 
-  --font-display: var(--font-display), "Geist Sans", sans-serif;
-  --font-sans: var(--font-geist-sans), "Helvetica Neue", sans-serif;
-  --font-mono: var(--font-geist-mono), "SF Mono", monospace;
+  --font-display: var(--font-space-grotesk), ui-sans-serif, system-ui, sans-serif;
+  --font-sans: var(--font-space-grotesk), ui-sans-serif, system-ui, sans-serif;
+  --font-mono: var(--font-jetbrains-mono), ui-monospace, "SF Mono", Menlo, monospace;
 
   --ease-out: cubic-bezier(0.16, 1, 0.3, 1);
 }
@@ -38,33 +39,29 @@
     text-rendering: optimizeLegibility;
   }
   ::selection {
-    background: rgba(255, 51, 85, 0.28);
-    color: #fff;
+    background: rgba(208, 112, 79, 0.35);
+    color: var(--color-text);
+  }
+  :focus-visible {
+    outline: 2px solid var(--color-accent);
+    outline-offset: 3px;
   }
 }
 
 @layer components {
   .display {
     font-family: var(--font-display);
-    font-weight: 600;
+    font-weight: 500;
     letter-spacing: -0.03em;
     line-height: 1.02;
-  }
-
-  /* Red→ember gradient text for emphasis */
-  .grad {
-    background: linear-gradient(110deg, var(--color-red-bright), var(--color-ember));
-    -webkit-background-clip: text;
-    background-clip: text;
-    color: transparent;
   }
 
   .eyebrow {
     font-family: var(--font-mono);
     font-size: 0.72rem;
-    letter-spacing: 0.18em;
+    letter-spacing: 0.12em;
     text-transform: uppercase;
-    color: var(--color-red-bright);
+    color: var(--color-accent);
   }
 
   .tag {
@@ -76,52 +73,52 @@
     font-family: var(--font-mono);
     font-size: 0.72rem;
     letter-spacing: 0.04em;
-    color: var(--color-red-bright);
-    background: rgba(255, 51, 85, 0.08);
-    border: 1px solid rgba(255, 51, 85, 0.22);
+    color: var(--color-accent-ink);
+    background: rgba(208, 112, 79, 0.12);
+    border: 1px solid rgba(208, 112, 79, 0.3);
   }
 
-  /* Primary button — red with glow */
   .btn {
     display: inline-flex;
     align-items: center;
     gap: 0.5rem;
-    border-radius: 8px;
+    border-radius: 6px;
     padding: 0.66rem 1.2rem;
     font-size: 0.92rem;
     font-weight: 500;
-    color: #fff;
-    background: linear-gradient(120deg, var(--color-red), var(--color-ember));
-    box-shadow:
-      0 0 0 1px rgba(255, 90, 118, 0.4),
-      0 8px 30px -8px rgba(255, 51, 85, 0.6);
-    transition:
-      transform 0.2s var(--ease-out),
-      box-shadow 0.2s var(--ease-out);
+    color: var(--color-on-accent);
+    background: var(--color-accent);
+    border: 1px solid var(--color-accent);
+    transition: transform 0.15s var(--ease-out);
   }
-  .btn:hover {
-    transform: translateY(-1px);
-    box-shadow:
-      0 0 0 1px rgba(255, 90, 118, 0.6),
-      0 12px 40px -8px rgba(255, 51, 85, 0.8);
+  .btn:active {
+    transform: scale(0.98);
   }
   .btn-ghost {
-    background: var(--color-surface);
+    background: transparent;
     color: var(--color-text);
-    border: 1px solid var(--color-line-2);
-    box-shadow: none;
+    border-color: var(--color-line-2);
   }
   .btn-ghost:hover {
-    background: var(--color-surface-2);
-    box-shadow: none;
+    border-color: var(--color-muted);
   }
 
-  /* Glass card */
   .card {
-    background: linear-gradient(180deg, rgba(255, 255, 255, 0.04), rgba(255, 255, 255, 0.015));
+    background: var(--color-elev);
     border: 1px solid var(--color-line);
-    border-radius: 14px;
-    backdrop-filter: blur(8px);
+    border-radius: 10px;
+  }
+
+  /* Code panes are opaque so nothing behind them shows through. */
+  .pane {
+    background: var(--color-code);
+    border: 1px solid var(--color-line);
+    border-radius: 10px;
+  }
+
+  /* The "before" side of a diptych: present, but not competing with the after. */
+  .code-muted [class^="tok-"] {
+    color: inherit;
   }
 
   kbd {
@@ -129,27 +126,25 @@
     font-size: 0.78em;
     border: 1px solid var(--color-line-2);
     border-radius: 5px;
-    background: var(--color-surface);
+    background: var(--color-inset);
     padding: 0.05em 0.4em;
     color: var(--color-text);
   }
 
-  /* Syntax tokens — tuned for the dark surface */
+  /* Syntax tokens, tuned for the dark surface */
   .tok-comment {
-    color: #5f6472;
+    color: var(--color-faint);
     font-style: italic;
   }
   .tok-kw {
-    color: var(--color-red-bright);
+    color: var(--color-accent);
   }
   .tok-type {
-    color: #5fc6e7;
+    color: var(--color-text);
   }
-  .tok-str {
-    color: #8fd98a;
-  }
+  .tok-str,
   .tok-num {
-    color: var(--color-ember);
+    color: var(--color-accent-ink);
   }
 }
 
@@ -172,22 +167,14 @@
       transform: none;
       transition: none;
     }
+    .btn,
+    .btn:active {
+      transform: none;
+      transition: none;
+    }
     html {
       scroll-behavior: auto;
     }
-  }
-
-  /* Red glow halo */
-  .glow {
-    box-shadow: 0 0 80px -10px rgba(255, 51, 85, 0.45);
-  }
-  @keyframes twinkle {
-    0%, 100% { opacity: 0.5; }
-    50% { opacity: 1; }
-  }
-  @keyframes drift {
-    from { transform: translateY(0); }
-    to { transform: translateY(-12px); }
   }
 
   /* Indeterminate progress bar sweep */
@@ -198,19 +185,12 @@
   .loadbar {
     animation: loadbar 1.5s cubic-bezier(0.4, 0, 0.2, 1) infinite;
   }
-  /* Shimmering skeleton placeholder */
   @keyframes shimmer {
-    0% { background-position: -200% 0; }
-    100% { background-position: 200% 0; }
+    0%, 100% { opacity: 1; }
+    50% { opacity: 0.5; }
   }
   .skel {
-    background: linear-gradient(
-      90deg,
-      rgba(255, 255, 255, 0.035) 25%,
-      rgba(255, 255, 255, 0.09) 37%,
-      rgba(255, 255, 255, 0.035) 63%
-    );
-    background-size: 200% 100%;
+    background: var(--color-inset);
     animation: shimmer 1.5s ease-in-out infinite;
     border-radius: 6px;
   }
