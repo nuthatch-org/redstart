@@ -51,7 +51,7 @@ export default async function Image() {
         {/* wordmark */}
         <div style={{ display: "flex", alignItems: "center", gap: 16 }}>
           <Bird s={36} color={ACCENT} />
-          <span style={{ fontFamily: "JetBrains Mono", fontSize: 28, letterSpacing: "0.01em", color: TEXT }}>Redstart</span>
+          <span style={{ fontFamily: "Space Grotesk", fontSize: 32, letterSpacing: "-0.06em", color: TEXT }}>redstart</span>
         </div>
 
         {/* tagline */}

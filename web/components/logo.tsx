@@ -27,7 +27,7 @@ export function Wordmark({ className = "" }: { className?: string }) {
   return (
     <span className={`inline-flex items-center gap-2 ${className}`}>
       <Bird className="h-[1.15em] w-[1.15em] text-accent" />
-      <span className="font-medium tracking-tight">Redstart</span>
+      <span className="font-display font-semibold tracking-[-0.06em]">redstart</span>
     </span>
   );
 }
