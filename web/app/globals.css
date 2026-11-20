@@ -162,6 +162,11 @@
       transform: none;
       transition: none;
     }
+    .btn,
+    .btn:active {
+      transform: none;
+      transition: none;
+    }
     html {
       scroll-behavior: auto;
     }

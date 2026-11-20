@@ -553,7 +553,7 @@ function FilesPanel({
           <button onClick={runFix} disabled={autoFixing || verifying} className="btn disabled:opacity-50">
             {autoFixing ? (
               <span className="flex items-center gap-2">
-                <span className="h-3 w-3 animate-spin rounded-full border-2 border-on-accent/30 border-t-on-accent" />
+                <span className="h-3 w-3 motion-safe:animate-spin rounded-full border-2 border-on-accent/30 border-t-on-accent" />
                 Fixing…
               </span>
             ) : (
@@ -695,7 +695,7 @@ function GeneratingPanel() {
       </div>
       <div className="p-5">
         <div className="mb-4 flex items-center gap-3">
-          <span className="h-4 w-4 shrink-0 animate-spin rounded-full border-2 border-accent/25 border-t-accent" />
+          <span className="h-4 w-4 shrink-0 motion-safe:animate-spin rounded-full border-2 border-accent/25 border-t-accent" />
           <div>
             <p className="text-sm text-text">Generating with Claude Opus 4.8…</p>
             <p className="text-xs text-faint">
@@ -711,7 +711,7 @@ function GeneratingPanel() {
                   <span className="text-ok">✓</span>
                 ) : i === step ? (
                   <span className="relative flex h-2 w-2">
-                    <span className="absolute inline-flex h-full w-full animate-ping rounded-full bg-accent opacity-75" />
+                    <span className="absolute inline-flex h-full w-full motion-safe:animate-ping rounded-full bg-accent opacity-75" />
                     <span className="relative inline-flex h-2 w-2 rounded-full bg-accent" />
                   </span>
                 ) : (
@@ -747,7 +747,7 @@ function VerifyBanner({
           <div className="loadbar h-full w-1/4 rounded-full bg-accent" />
         </div>
         <div className="flex items-center gap-2.5 bg-inset px-4 py-2.5 text-sm text-muted">
-          <span className="h-3.5 w-3.5 shrink-0 animate-spin rounded-full border-2 border-accent/25 border-t-accent" />
+          <span className="h-3.5 w-3.5 shrink-0 motion-safe:animate-spin rounded-full border-2 border-accent/25 border-t-accent" />
           Compiling on the real Graph toolchain — running codegen, build &amp; test…
         </div>
       </div>
