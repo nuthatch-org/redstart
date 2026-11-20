@@ -131,6 +131,7 @@ export default function Home() {
                 </span>
               </div>
               <FileTabs
+                muted
                 className="min-h-[360px]"
                 files={[
                   { name: "mappings.ts", lang: "ts", code: AS_MAPPINGS },

@@ -116,6 +116,11 @@
     border-radius: 10px;
   }
 
+  /* The "before" side of a diptych: present, but not competing with the after. */
+  .code-muted [class^="tok-"] {
+    color: inherit;
+  }
+
   kbd {
     font-family: var(--font-mono);
     font-size: 0.78em;

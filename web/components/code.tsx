@@ -1,4 +1,7 @@
+"use client";
+
 import { highlight, type Lang } from "@/lib/highlight";
+import { ScrollHint, useOverflowsX } from "./scroll-hint";
 
 export function CodeBlock({
   code,
@@ -11,6 +14,7 @@ export function CodeBlock({
   filename?: string;
   className?: string;
 }) {
+  const [preRef, overflows] = useOverflowsX<HTMLPreElement>();
   return (
     <div className={`pane overflow-hidden ${className}`}>
       {filename ? (
@@ -21,9 +25,10 @@ export function CodeBlock({
             <i className="h-2.5 w-2.5 rounded-full bg-line-2" />
           </span>
           <span className="ml-1 font-mono text-xs text-faint">{filename}</span>
+          {overflows ? <ScrollHint /> : null}
         </div>
       ) : null}
-      <pre className="overflow-x-auto p-5 font-mono text-[0.82rem] leading-[1.65] text-text/90">
+      <pre ref={preRef} className="overflow-x-auto p-5 font-mono text-[0.82rem] leading-[1.65] text-text/90">
         <code dangerouslySetInnerHTML={{ __html: highlight(code, lang) }} />
       </pre>
     </div>
