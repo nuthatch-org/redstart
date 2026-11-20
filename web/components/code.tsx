@@ -12,7 +12,7 @@ export function CodeBlock({
   className?: string;
 }) {
   return (
-    <div className={`card overflow-hidden ${className}`}>
+    <div className={`pane overflow-hidden ${className}`}>
       {filename ? (
         <div className="flex items-center gap-2 border-b border-line px-4 py-2.5">
           <span className="flex gap-1.5">

@@ -169,7 +169,7 @@ export function Playground() {
     tab === "diagnostics" || !result ? "" : result[tab as "mappings" | "schema" | "manifest"];
 
   return (
-    <div className="grid h-full min-h-0 grid-cols-1 grid-rows-2 lg:grid-cols-2 lg:grid-rows-1">
+    <div className="grid h-full min-h-0 grid-cols-1 grid-rows-2 bg-code lg:grid-cols-2 lg:grid-rows-1">
       {/* Editor with live highlighting overlay */}
       <div className="flex min-h-0 min-w-0 flex-col border-b border-line lg:border-b-0 lg:border-r">
         <PaneHead label="source.red">

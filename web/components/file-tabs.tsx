@@ -15,7 +15,7 @@ export function FileTabs({
   const [active, setActive] = useState(0);
   const file = files[active];
   return (
-    <div className={`card flex flex-col overflow-hidden ${className}`}>
+    <div className={`pane flex flex-col overflow-hidden ${className}`}>
       <div className="flex items-center gap-1 overflow-x-auto border-b border-line px-2 py-1.5">
         {files.map((f, i) => (
           <button

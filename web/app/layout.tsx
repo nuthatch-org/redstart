@@ -3,7 +3,6 @@ import localFont from "next/font/local";
 import "./globals.css";
 import { Nav } from "@/components/nav";
 import { Footer } from "@/components/footer";
-import { Cosmos } from "@/components/cosmos";
 import { VersionWatcher } from "@/components/version-watcher";
 
 const sans = localFont({
@@ -53,7 +52,6 @@ export default function RootLayout({
       className={`${sans.variable} ${mono.variable} h-full antialiased`}
     >
       <body className="relative flex min-h-full flex-col bg-bg text-text">
-        <Cosmos />
         <Nav />
         <main className="relative flex-1">{children}</main>
         <Footer />

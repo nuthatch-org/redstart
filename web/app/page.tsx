@@ -3,7 +3,6 @@ import { Reveal } from "@/components/reveal";
 import { CodeBlock } from "@/components/code";
 import { FileTabs } from "@/components/file-tabs";
 import { Bird } from "@/components/logo";
-import { Constellation } from "@/components/constellation";
 import {
   REDSTART_ERC20,
   AS_MAPPINGS,
@@ -54,7 +53,6 @@ export default function Home() {
       {/* ---- Hero ---- */}
       <section className="relative overflow-hidden border-b border-line">
         <div className="relative mx-auto max-w-6xl px-5 pb-16 pt-16 sm:pb-24 sm:pt-28">
-          <Constellation className="pointer-events-none absolute right-0 top-6 hidden h-[420px] w-[420px] opacity-90 lg:block" />
           <Reveal>
             <span className="tag">
               <Bird className="h-3.5 w-3.5" />
