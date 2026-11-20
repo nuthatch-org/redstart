@@ -10,7 +10,7 @@ export const metadata: Metadata = {
 
 export default function PlaygroundPage() {
   return (
-    <div className="flex h-[calc(100dvh-3.5rem)] flex-col">
+    <div className="flex h-[calc(100dvh-5rem)] flex-col sm:h-[calc(100dvh-3.5rem)]">
       <div className="flex flex-wrap items-center justify-between gap-2 border-b border-line px-5 py-2.5">
         <div className="flex items-center gap-2">
           <Bird className="h-4 w-4 text-accent" />
