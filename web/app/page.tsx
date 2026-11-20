@@ -11,6 +11,45 @@ import {
 } from "@/lib/samples";
 
 const REPO = "https://github.com/nuthatch-org/redstart";
+const DOCS = "https://nuthatch-org.github.io/redstart/";
+
+// Each figure is from the repo: README kill-gate and eject-path results, and
+// the explanation table behind `redstart explain` (crates/redstart-checker/src/explain.rs).
+const PROOF = [
+  {
+    n: "0",
+    unit: "differences",
+    d: "Store-diffed against a hand-written reference on a live graph-node: 10 Account and 13 Transfer entities at Arbitrum One block 477,660,492.",
+  },
+  {
+    n: "0",
+    unit: "manual edits",
+    d: "graph codegen and graph build compile the emitted subgraph to WebAssembly unmodified.",
+  },
+  {
+    n: "37",
+    unit: "diagnostic codes",
+    d: "Each one explained by redstart explain: what tripped it, and the fix.",
+  },
+];
+
+const DOES = [
+  "Unify schema, manifest and mappings in one typed source, across as many .red modules as you like.",
+  "Emit readable AssemblyScript that graph build compiles unmodified.",
+  "Handle events, calls, blocks and files, with templates and dynamic data sources.",
+  "Test handlers natively with redstart test: no WASM, Docker or Matchstick.",
+  "Ship a language server, with VS Code and Zed extensions.",
+  "Deploy to Subgraph Studio or a self-hosted graph-node.",
+];
+
+const DOESNT = [
+  "Make indexing faster. It makes staying on The Graph pleasant.",
+  "Expose event.receipt, so a handler cannot read neighbouring logs.",
+  "Run call handlers where there is no Parity-style tracing, which is most L2s. W010 warns.",
+  "Deploy one manifest to several networks. That stays in your own configuration.",
+  "Parse a ternary or a module-level constant. Use an if, or a helper fn.",
+  "Emit fulltext search yet.",
+];
 
 const FOOTGUNS = [
   {
@@ -90,11 +129,33 @@ export default function Home() {
             </div>
           </Reveal>
           <Reveal i={4}>
-            <div className="mt-6 flex w-full max-w-full items-center gap-3 overflow-x-auto rounded-lg border border-line bg-inset px-4 py-2.5 font-mono text-xs text-text/90 sm:inline-flex sm:w-auto sm:text-sm">
+            <div className="mt-6 flex w-full max-w-full items-start gap-3 rounded-lg border border-line bg-inset px-4 py-2.5 font-mono text-xs text-text/90 sm:inline-flex sm:w-auto sm:text-sm">
               <span className="shrink-0 text-accent">$</span>
-              <span className="whitespace-nowrap">curl -fsSL redstart-lang.com/install.sh | sh</span>
+              <span className="min-w-0 whitespace-pre-wrap [overflow-wrap:anywhere]">curl -fsSL redstart-lang.com/install.sh | sh</span>
             </div>
           </Reveal>
+        </div>
+      </section>
+
+      {/* ---- Proof ---- */}
+      <section className="border-b border-line bg-elev">
+        <div className="mx-auto max-w-6xl px-5 py-12 sm:py-16">
+          <Reveal>
+            <p className="eyebrow">Proven, not promised</p>
+          </Reveal>
+          <div className="mt-8 grid gap-10 sm:grid-cols-3 sm:gap-8">
+            {PROOF.map((p, i) => (
+              <Reveal key={p.unit} i={i} className="min-w-0">
+                <div className="display text-5xl tabular-nums sm:text-6xl">
+                  {p.n}
+                  <span className="ml-2 font-mono text-sm uppercase tracking-[0.12em] text-accent">
+                    {p.unit}
+                  </span>
+                </div>
+                <p className="mt-3 max-w-[34ch] text-muted">{p.d}</p>
+              </Reveal>
+            ))}
+          </div>
         </div>
       </section>
 
@@ -110,7 +171,7 @@ export default function Home() {
 
           <div className="mt-12 grid items-start gap-6 lg:grid-cols-2">
             <Reveal i={1} className="flex min-w-0 flex-col gap-3">
-              <div className="flex items-center justify-between">
+              <div className="flex items-center justify-between gap-3">
                 <span className="inline-flex items-center gap-2 text-sm font-medium">
                   <Bird className="h-4 w-4 text-accent" /> Redstart
                 </span>
@@ -122,7 +183,7 @@ export default function Home() {
             </Reveal>
 
             <Reveal i={2} className="flex min-w-0 flex-col gap-3">
-              <div className="flex items-center justify-between">
+              <div className="flex items-center justify-between gap-3">
                 <span className="text-sm font-medium text-muted">
                   …or these three, kept in sync by hand?
                 </span>
@@ -200,13 +261,6 @@ export default function Home() {
               unmodified. Walk away whenever you like; you keep the generated
               code, and it keeps working.
             </p>
-            <p className="mt-4 max-w-lg leading-relaxed text-muted">
-              And it&apos;s <span className="text-text">proven</span>, not promised:
-              deployed to a live graph-node against an independent hand-written
-              reference, our lowered AssemblyScript store-diffed{" "}
-              <span className="text-text">0 differences</span> across every entity
-              and field — byte-identical indexing.
-            </p>
           </Reveal>
           <Reveal i={1}>
             <div className="card p-7 font-mono text-sm">
@@ -244,6 +298,49 @@ export default function Home() {
         </div>
       </section>
 
+      {/* ---- Scope ---- */}
+      <section className="border-b border-line">
+        <div className="mx-auto max-w-6xl px-5 py-16 sm:py-24">
+          <Reveal>
+            <p className="eyebrow">Scope</p>
+            <h2 className="display mt-3 max-w-2xl text-4xl sm:text-5xl">
+              What it does, and what it doesn&apos;t.
+            </h2>
+          </Reveal>
+          <div className="mt-12 grid gap-px overflow-hidden rounded-[10px] border border-line bg-line md:grid-cols-2">
+            {[
+              { label: "It does", tone: "text-ok", items: DOES },
+              { label: "It doesn\u2019t", tone: "text-accent", items: DOESNT },
+            ].map((col, i) => (
+              <Reveal key={col.label} i={i} className="min-w-0 bg-elev p-7">
+                <p className={`font-mono text-xs uppercase tracking-[0.12em] ${col.tone}`}>
+                  {col.label}
+                </p>
+                <ul className="mt-5 space-y-3">
+                  {col.items.map((item) => (
+                    <li key={item} className="flex gap-3 leading-relaxed text-muted">
+                      <span aria-hidden className={`font-mono ${col.tone}`}>
+                        {i === 0 ? "+" : "-"}
+                      </span>
+                      {item}
+                    </li>
+                  ))}
+                </ul>
+              </Reveal>
+            ))}
+          </div>
+          <Reveal>
+            <p className="mt-8 max-w-2xl text-muted">
+              The{" "}
+              <a href={`${DOCS}porting.html`} className="text-accent hover:underline">
+                porting guide
+              </a>{" "}
+              covers each limit, and the pattern that replaces receipt inspection.
+            </p>
+          </Reveal>
+        </div>
+      </section>
+
       {/* ---- Final CTA ---- */}
       <section className="relative overflow-hidden">
         <div className="relative mx-auto max-w-6xl px-5 py-20 sm:py-28 text-center">
@@ -256,7 +353,7 @@ export default function Home() {
               The playground runs the real compiler in your browser. Type
               Redstart, watch the three files generate live.
             </p>
-            <div className="mt-8 flex justify-center gap-3">
+            <div className="mt-8 flex flex-wrap justify-center gap-3">
               <Link href="/playground" className="btn">
                 Open the playground
                 <span aria-hidden>→</span>
